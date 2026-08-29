@@ -97,16 +97,37 @@ export; chat UI (custom-themed embed coming) for interaction.
 ## Qodo Code Review Evidence
 
 Every PR in this repo is reviewed by [Qodo](https://www.qodo.ai) before merge;
-direct pushes to `main` carry no feature work.
+direct pushes to `main` carry no feature work. Review priorities are codified in
+[`.pr-agent.toml`](.pr-agent.toml): secret hygiene, API correctness,
+determinism, judge runnability.
 
-- **PR #1 — initial scaffold** (agent manifest, skill, samples, scripts, docs):
-  [#1](https://github.com/sreenathmmenon/cleanroom/pull/1). Summary of Qodo
-  findings and our responses will be added here as reviews land.
+| PR | Qodo findings | Our response |
+|---|---|---|
+| [#1 — scaffold + bring-up](https://github.com/sreenathmmenon/cleanroom/pull/1) | 11 bugs across 4 review passes (env-precedence mismatch, text dates unparseable, ambiguous dates silently guessed, key fragments in logs, success output after failed setup, TDZ ordering, …) | 10 fixed in four follow-up commits on the same PR; 1 security finding (classic-token scope) [dismissed with a written rotation argument](https://github.com/sreenathmmenon/cleanroom/pull/1#issuecomment-5461708004) |
+| [#2 — scripted demo](https://github.com/sreenathmmenon/cleanroom/pull/2) | 0 bugs; alternative-approach note (streaming vs polling) | [Kept polling per Qodo's own recommendation](https://github.com/sreenathmmenon/cleanroom/pull/2#issuecomment-5461756405) — dependency-free, explicit turn resumption |
+| [#3 — local-skill decoupling](https://github.com/sreenathmmenon/cleanroom/pull/3) | 3 suggestions | [Conditional skill attach implemented](https://github.com/sreenathmmenon/cleanroom/pull/3#issuecomment-5461769466); two deferred with reasons |
+
+The finding that shaped the product most: *"Ambiguous dates are guessed"* →
+became the evidence-based inference (a component >12 proves its side), which is
+now the demo's signature behavior.
+
+## Where to see each judging criterion
+
+| Criterion | Evidence |
+|---|---|
+| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
+| Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
+| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), MCP approvals, dynamic subagents (isolated retry observed), sessions, generative UI tables |
+| Use of Qodo | Table above; every merged PR carries its review thread |
+| Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
+| Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
 
 ## Status & roadmap
 
 - [x] Agent spec, skill methodology, sample corpus, seeding pipeline
-- [ ] End-to-end vertical slice on live TrueForge (profile → gate → verify)
+- [x] End-to-end vertical slice on live TrueForge (profile → clarify → plan → gate → verify)
+- [x] Approval-gated delivery as a pull request ([PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — opened by the agent)
+- [x] Scripted replay for judges (`npm run demo`)
 - [ ] Custom-themed embeddable UI with diff previews
 - [ ] Second dataset persona (inventory export)
 
