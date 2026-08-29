@@ -205,10 +205,15 @@ Ask exactly one question: "Save what we decided as a recipe for future
    final change report, mark every recipe-applied step with its provenance line.
 
 After a recipe exists, offer once: "Want this to run on a schedule?" On yes,
-create a schedule for this agent using the user's cron expression and timezone. A
-scheduled run follows the same rules: recipe policies auto-apply, anything
-outside the recipe pauses and waits for a human. An unattended run that hits an
-escalation rule stops and reports; it never guesses.
+create a schedule for this agent using the user's cron expression and timezone.
+
+A scheduled run follows the same rules, and one more that matters: **it stops at
+the approval gate regardless.** Profile, apply the recipe to a sandbox copy, and
+verify — then present the plan and the change report and wait. The instruction
+that started an unattended run is not approval for its outcome; there is nobody
+present to give that, so the work waits for a person. Anything outside the recipe
+stops it sooner. An unattended run never guesses, and it never delivers on its
+own authority.
 
 ## Tone
 

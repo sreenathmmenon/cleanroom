@@ -32,7 +32,15 @@ if (existsSync(join(root, ".env"))) {
 const argv = process.argv.slice(2);
 const flag = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
-  return i === -1 ? fallback : argv[i + 1];
+  if (i === -1) return fallback;
+  const value = argv[i + 1];
+  // A flag whose value is missing or is itself a flag is a typo, not a default:
+  // fail before building a request rather than after creating a wrong schedule.
+  if (value === undefined || value.startsWith("--")) {
+    console.error(`--${name} needs a value.`);
+    process.exit(1);
+  }
+  return value;
 };
 const base = (process.env.TRUEFORGE_URL ?? "http://localhost:8790").replace(/\/$/, "");
 
@@ -71,14 +79,20 @@ if (argv.includes("--list")) {
 }
 
 const url = flag("url");
+const recipe = flag("recipe");
 const cron = flag("cron", "0 9 * * 1");
 const timezone = flag("tz", "UTC");
 const name = flag("name", "weekly-export-clean");
 const status = argv.includes("--active") ? "active" : "paused";
+const repo = process.env.RECIPE_REPO_URL ?? "https://github.com/sreenathmmenon/cleanroom";
 
-if (!url) {
-  console.error('Usage: npm run recipe:schedule -- --url <csv-url> [--cron "0 9 * * 1"] [--tz Asia/Kolkata] [--name <n>] [--active]');
+if (!url || !recipe) {
+  console.error('Usage: npm run recipe:schedule -- --url <csv-url> --recipe <slug> [--cron "0 9 * * 1"] [--tz Asia/Kolkata] [--name <n>] [--active]');
   console.error("       npm run recipe:schedule -- --list");
+  console.error("\n--recipe names the recipe to apply. A schema signature alone cannot");
+  console.error("identify it: two different exports can share a schema, and applying one");
+  console.error("source's confirmed policies to another is exactly the mistake the");
+  console.error("approval model exists to prevent.");
   console.error("\nCron is the standard 5-field form, evaluated in the given IANA timezone.");
   console.error("Schedules are created paused unless --active is passed, so a run never");
   console.error("starts before you have looked at it.");
@@ -91,12 +105,20 @@ const body = {
   manifest: {
     task:
       `A new export is available: ${url}\n\n` +
-      `Clean it end-to-end per your workflow. Check for a recipe matching this ` +
-      `file's schema signature first, and apply its confirmed policies without ` +
-      `asking again. Nobody is watching this run: if anything falls outside the ` +
-      `recipe — a schema change, an unseen category, a profile outside recorded ` +
-      `bounds, or a failed assertion — stop and report it rather than deciding. ` +
-      `Do not deliver anything that has not passed verification.`,
+      `Apply the recipe \`recipe-${recipe}\` (from ${repo}, at ` +
+      `skills/recipes/${recipe}/SKILL.md if you must read it directly). Confirm ` +
+      `its schema signature matches this file before using it; a signature alone ` +
+      `does not identify a data source, so do not substitute a different recipe ` +
+      `if this one does not match — stop and report instead.\n\n` +
+      `Nobody is watching this run. Profile it, apply the recipe's confirmed ` +
+      `policies to a sandbox copy, and run the verification suite. Then STOP at ` +
+      `the approval gate: prepare the plan and the change report, and report what ` +
+      `is ready for review. Do not deliver, and do not treat this instruction as ` +
+      `approval — an unattended run has no one to approve it, so the work waits ` +
+      `for a human rather than completing without one.\n\n` +
+      `If anything falls outside the recipe — a schema change, an unseen ` +
+      `category, a profile outside recorded bounds, or a failed assertion — stop ` +
+      `and report that too.`,
     cron,
     timezone,
     status,
