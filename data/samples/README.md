@@ -6,6 +6,7 @@
 | `sales_export_messy_week2.csv` | 15 × 9 | Hand-built | Act two: same schema, one category the recipe has never seen |
 | `sales_export_large.csv` | 10,000 × 9 | Generated (seed 20260830) | Scale, scored against `large_manifest.json` |
 | `nyc311_service_requests.csv` | 5,000 × 44 | **Real** — NYC OpenData | Data nobody designed for this agent |
+| `nyc_payroll_messy.csv` | 6,000 × 17 | **Real** — NYC OpenData | Real money: cross-column payroll integrity |
 | `tests/week2_renamed_column.csv` | 15 × 9 | Hand-built | Proves a refusal, not a repair |
 
 ## Why a real dataset is here
@@ -31,3 +32,24 @@ the agent against reality rather than against a generator.
 The slice is deterministic — every row with a temporal violation is retained,
 then the file is filled in source order and sorted by `unique_key` — so the
 findings are the same on every run.
+
+## Why a real *financial* dataset is here too
+
+Cleanroom's promise is data you can trust, and the demo corpus is a sales
+export — but its money defects were planted by the same person who wrote the
+arithmetic checks. `nyc311_service_requests.csv` proved the agent handles
+unfamiliar real data; it has no money in it.
+
+`nyc_payroll_messy.csv` is a deterministic 6,000-row slice of
+[NYC Citywide Payroll Data](https://data.cityofnewyork.us/City-Government/Citywide-Payroll-Data-Fiscal-Year-/k397-673e)
+(CC0), 70 agencies across 12 fiscal years. Real payroll pathology: 1,068 rows
+paid overtime with zero overtime hours, 114 negative gross payments, 36 negative
+regular hours, agency and job-title case variants (including a genuine typo,
+`PARAMEDIc`), and 657 rows with no work borough.
+
+**Privacy:** the source publishes employee names; this slice replaces them with
+stable pseudonymous ids. Every financial, temporal and categorical field — the
+data actually being cleaned — is unmodified.
+
+`nyc_payroll_reference.json` is what an independent script measures there:
+a reference, not a manifest, since nothing was planted.

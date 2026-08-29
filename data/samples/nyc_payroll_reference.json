@@ -1,0 +1,47 @@
+{
+  "source": "NYC OpenData Citywide Payroll Data (k397-673e), CC0 public domain",
+  "retrieved": "2026-08-30",
+  "privacy": "Employee names replaced with stable pseudonymous ids (SHA-256 prefix). Every financial, temporal and categorical field - the data being cleaned - is unmodified from the source.",
+  "note": "Independently measured, NOT planted. Scores a profiling run against real financial data whose defects nobody designed.",
+  "sha256": "fa81f5f60b2201097b2ab5e1fc785bb22602c96c2bce8a3b09390d8cc231932a",
+  "shape": {
+    "rows": 6000,
+    "columns": 17
+  },
+  "measured": {
+    "exact_duplicate_rows": 0,
+    "ot_paid_with_zero_ot_hours": 1068,
+    "ot_hours_with_zero_ot_paid": 6,
+    "negative_regular_gross_paid": 114,
+    "negative_regular_hours": 36,
+    "negative_ot_hours": 12,
+    "negative_total_other_pay": 123,
+    "agency_name_distinct": 70,
+    "agency_name_variant_groups": 1,
+    "agency_name_variant_rows": 293,
+    "title_distinct": 320,
+    "title_variant_groups": 1,
+    "title_variant_rows": 7,
+    "empty_work_location_borough": 657,
+    "distinct_pay_basis": [
+      "Prorated Annual",
+      "per Annum",
+      "per Day",
+      "per Hour"
+    ],
+    "distinct_fiscal_years": [
+      "2014",
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ]
+  }
+}
