@@ -3,7 +3,15 @@
 The first run on this data source cost the user five questions. This is the
 second run: a fresh export, same schema, with the recipe from run 1 in place.
 
-It asked **one** question — and not one of the five.
+It asked **one** question where run 1 asked five — and it is a different
+question.
+
+Scope of this evidence, stated up front: the capture ends at that first pause,
+which is where the run stops for a human. It shows which questions the recipe
+removed and which escalation it raised; it does not show the subsequent apply,
+verify, and deliver phases, because those wait on the answer. The end-to-end
+apply-and-verify cycle is evidenced separately in the
+[flagship run](flagship-run.md).
 
 - Recipe: `skills/recipes/sales-export/SKILL.md`, learned from run
   `01m16gcpa4tyfvm1v87j97gezp` (the run that produced
@@ -64,6 +72,15 @@ Both went into a single question:
 The third option is the one that matters: the agent offers to abandon its own
 recipe and start fresh. A standing policy is a convenience it will give up, not
 a position it defends.
+
+**One error, recorded rather than edited out.** The question says order `1051`
+carries `southwest`. It does not — `southwest` is on order **1048**; order 1051
+is `East`. The count (one row) and the value are right, and nothing was applied,
+so no data was affected; but the decision record points at the wrong source row,
+and a user answering this question would have looked up the wrong order. The
+escalation fired correctly and the identification did not. Worth stating plainly:
+the mechanism that catches unseen values is reliable here, the row reference in
+the prose is not, and only the first of those is load-bearing for safety.
 
 ## Delegation still happened, and still escalated
 
@@ -176,9 +193,16 @@ The schema signature matches exactly: `d97e2515…b0b83f`, so the recipe is appl
 ## Reproducing this
 
 ```bash
-npm run demo:recipe        # interactive: the one question pauses for you
+npm run check:recipe-guard      # asserts the signature gate, exits non-zero if it breaks
+npm run demo:recipe             # interactive: the one question pauses for you
 npm run demo:recipe -- --auto   # unattended: halts on the escalation, exit 2
 ```
+
+`check:recipe-guard` is the executable half of this evidence. It recomputes the
+signature from the recipe's own documented derivation and asserts that the
+recipe records that signature, that the week-2 export matches it, and that the
+renamed-column fixture does not. A regression that let the recipe fire on the
+wrong schema fails that third check.
 
 ---
 
