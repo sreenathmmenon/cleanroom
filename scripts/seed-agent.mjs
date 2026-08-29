@@ -68,7 +68,7 @@ const existing = agents.find((a) => a.name === spec.name);
 const outcome = existing
   ? await api(`/api/v1/agents/${existing.id}`, {
       method: "PUT",
-      body: JSON.stringify({ name: spec.name, manifest: spec.manifest }),
+      body: JSON.stringify({ manifest: spec.manifest }),
     })
   : await api("/api/v1/agents", {
       method: "POST",
