@@ -11,11 +11,22 @@
  *
  * No external dependencies — Node 22+ (built-in fetch).
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+// Minimal .env loader (no deps): KEY=VALUE lines, # comments, optional quotes.
+if (existsSync(join(root, ".env"))) {
+  for (const line of readFileSync(join(root, ".env"), "utf8").split("\n")) {
+    if (line.trimStart().startsWith("#")) continue;
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m && process.env[m[1]] === undefined) {
+      process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    }
+  }
+}
 const base = (process.env.TRUEFORGE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 const model = process.env.MODEL_FQN;
 
@@ -34,8 +45,8 @@ if (!res.ok) {
   console.error(`Cannot reach TrueForge at ${base} (${res.status}). Is it running?`);
   process.exit(1);
 }
-const { agents } = await res.json();
-const existing = (agents ?? []).find((a) => a.name === spec.name);
+const { data: agents = [] } = await res.json();
+const existing = agents.find((a) => a.name === spec.name);
 
 const outcome = existing
   ? await api(`/api/v1/agents/${existing.id}`, {
@@ -51,7 +62,7 @@ if (!outcome.ok) {
   console.error(`Seed failed (${outcome.status}): ${await outcome.text()}`);
   process.exit(1);
 }
-const saved = await outcome.json();
+const saved = (await outcome.json()).data ?? {};
 console.log(
   existing
     ? `Updated agent "${spec.name}" (id ${saved.id ?? existing.id}) at ${base}`

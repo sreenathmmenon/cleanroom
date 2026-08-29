@@ -5,9 +5,9 @@
  *   2. Sandbox provider (Daytona + DAYTONA_API_KEY)
  *   3. data-cleaning git skill (this repo, SKILL_REF)
  *
- * Secrets are read from .env (gitignored), sent over localhost to TrueForge's
- * settings API, and never logged. Redacted values keep stored keys on re-run,
- * so this script is idempotent and safe to run repeatedly.
+ * Secrets are read from .env (gitignored), sent to TrueForge's settings API,
+ * and never logged in full (redacted preview only). Catalog presets are
+ * copied wholesale so timeouts/model lists stay upstream defaults.
  *
  * Env: TRUEFORGE_URL, MODEL_PROVIDER, MODEL_API_KEY, DAYTONA_API_KEY, SKILL_REF
  * No external dependencies — Node 22+ (built-in fetch).
@@ -23,72 +23,74 @@ const env = { ...process.env };
 const envPath = join(root, ".env");
 if (existsSync(envPath)) {
   for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    if (line.trimStart().startsWith("#")) continue;
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m && !line.trimStart().startsWith("#")) {
-      env[m[1]] = m[2].replace(/^["']|["']$/g, "");
-    }
+    if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
 }
 
 const base = (env.TRUEFORGE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const redact = (s) => (s ? `${String(s).slice(0, 4)}…${String(s).slice(-2)} (${String(s).length} chars)` : "(empty)");
+const redact = (s) =>
+  s ? `${String(s).slice(0, 6)}…${String(s).slice(-2)} (${String(s).length} chars)` : "(empty)";
 const api = (path, init) =>
   fetch(`${base}${path}`, {
     ...init,
     headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
   });
-
-const up = await api("/api/v1/catalogs/model-providers").catch(() => null);
-if (!up || !up.ok) {
-  console.error(`Cannot reach TrueForge at ${base}. Start it first: ./scripts/setup.sh`);
+const fail = (msg) => {
+  console.error(msg);
   process.exit(1);
+};
+const errors = [];
+const softFail = (msg) => {
+  errors.push(msg);
+  console.error(msg);
+};
+
+const health = await api("/api/v1/agents").catch(() => null);
+if (!health || !health.ok) {
+  fail(`Cannot reach TrueForge at ${base}. Start it first: ./scripts/setup.sh`);
 }
 
-// 1. Model provider: copy the catalog preset, inject the key.
-const { model_providers: providerCatalog = [] } = await up.json();
+// 1. Model provider: copy the catalog preset for MODEL_PROVIDER, inject the key.
 const providerName = env.MODEL_PROVIDER;
-const preset = providerCatalog.find(
-  (p) => p.name === providerName || p.manifest?.name === providerName,
-);
+const catalogRes = await api("/api/v1/catalogs/model-providers");
+const { data: providerCatalog = [] } = catalogRes.ok ? await catalogRes.json() : {};
+const preset = providerCatalog.find((p) => p.type === providerName);
+
 if (!providerName || !env.MODEL_API_KEY) {
   console.log("MODEL_PROVIDER/MODEL_API_KEY not set — skipping model setup.");
-  console.log("Available presets:", providerCatalog.map((p) => p.name ?? p.manifest?.name).join(", "));
+  console.log("Available presets:", providerCatalog.map((p) => p.type).join(", "));
 } else if (!preset) {
-  console.error(`No catalog preset named "${providerName}". Available: ${providerCatalog.map((p) => p.name).join(", ")}`);
-  process.exit(1);
+  softFail(`No catalog preset for "${providerName}". Available: ${providerCatalog.map((p) => p.type).join(", ")}`);
 } else {
-  const manifest = structuredClone(preset.manifest ?? preset);
+  const { logo: _drop, ...manifest } = structuredClone(preset);
   manifest.auth = { api_key: env.MODEL_API_KEY };
   const r = await api("/api/v1/settings/model-providers", {
     method: "PUT",
     body: JSON.stringify({ manifest }),
   });
-  if (!r.ok) {
-    console.error(`Model provider setup failed (${r.status}): ${await r.text()}`);
-    process.exit(1);
-  }
-  console.log(`Model provider "${providerName}" configured (key ${redact(env.MODEL_API_KEY)}).`);
+  if (!r.ok) softFail(`Model provider setup failed (${r.status}): ${await r.text()}`);
+  console.log(`Model provider "${preset.type}" configured (key ${redact(env.MODEL_API_KEY)}).`);
+  console.log("Models available:", preset.models.map((m) => m.name).join(", "));
 }
 
-// 2. Sandbox provider: Daytona preset + key.
+// 2. Sandbox provider: Daytona catalog preset + key.
 if (env.DAYTONA_API_KEY) {
   const sb = await api("/api/v1/catalogs/sandbox-providers");
-  const { sandbox_providers: sbCatalog = [] } = sb.ok ? await sb.json() : {};
+  const { data: sbCatalog = [] } = sb.ok ? await sb.json() : [];
   const sbPreset = sbCatalog[0]; // Daytona is the shipped provider
-  const manifest = sbPreset?.manifest
-    ? { ...structuredClone(sbPreset.manifest), auth: { api_key: env.DAYTONA_API_KEY } }
+  const manifest = sbPreset
+    ? { ...structuredClone(sbPreset), auth: { api_key: env.DAYTONA_API_KEY } }
     : { type: "daytona", auth: { api_key: env.DAYTONA_API_KEY } };
   const r = await api("/api/v1/settings/sandbox-providers", {
     method: "PUT",
     body: JSON.stringify({ manifest }),
   });
-  if (!r.ok) {
-    console.error(`Sandbox provider setup failed (${r.status}): ${await r.text()}`);
-    process.exit(1);
-  }
-  console.log(`Sandbox provider "${manifest.type}" configured (key ${redact(env.DAYTONA_API_KEY)}).`);
+  if (!r.ok) softFail(`Sandbox provider setup failed (${r.status}): ${await r.text()}`);
+  else console.log(`Sandbox provider "${manifest.type}" configured (key ${redact(env.DAYTONA_API_KEY)}).`);
 } else {
-  console.log("DAYTONA_API_KEY not set — skipping sandbox setup.");
+  console.log("DAYTONA_API_KEY not set — skipping sandbox setup (local fallback will be used).");
 }
 
 // 3. Git skill: data-cleaning from this repo.
@@ -105,11 +107,12 @@ if (env.SKILL_REF) {
     method: "PUT",
     body: JSON.stringify({ manifest }),
   });
-  if (!r.ok) {
-    console.error(`Skill setup failed (${r.status}): ${await r.text()}`);
-    process.exit(1);
-  }
-  console.log(`Skill "data-cleaning" registered from repo @ ${env.SKILL_REF}.`);
+  if (!r.ok) softFail(`Skill setup failed (${r.status}): ${await r.text()}`);
+  else console.log(`Skill "data-cleaning" registered from repo @ ${env.SKILL_REF}.`);
 }
 
 console.log("\nNext: npm run seed   # then open the chat UI and try Cleanroom");
+if (errors.length) {
+  console.error(`\n${errors.length} step(s) failed — fix the issues above and re-run.`);
+  process.exit(1);
+}

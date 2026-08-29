@@ -5,14 +5,7 @@
       "name": "anthropic/claude-sonnet-4-5"
     },
     "instructions": "REPLACED_BY_SEED_SCRIPT_FROM_agent/instructions.md",
-    "mcp_servers": [
-      {
-        "name": "filesystem",
-        "enable_tools": ["@all"],
-        "preload_tools": [],
-        "require_approval_for_tools": ["@write", "@destructive"]
-      }
-    ],
+    "mcp_servers": [],
     "skills": [
       { "name": "data-cleaning" }
     ],
