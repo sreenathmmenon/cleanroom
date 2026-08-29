@@ -37,7 +37,7 @@ before anything irreversible.
 4. **Plan** — a numbered fix plan, each step labeled safe or **destructive**, with before/after previews and post-conditions.
 5. **Approval gate** — the agent stops. You approve, edit, or reject the plan. This is the product, not a speed bump.
 6. **Apply + Verify** — fixes run in the sandbox against a copy; a verification suite asserts row reconciliation, dtype/null post-conditions, and pipeline idempotence.
-7. **Deliver** — `cleaned_<name>` + `change_report.md` written via an MCP filesystem tool that requires approval for writes, then offered for download. Your original is never modified.
+7. **Deliver** — the agent opens a **pull request** through the GitHub MCP server: a branch `cleanroom/delivery-<id>` carrying `exports/<id>/cleaned_<name>` and `exports/<id>/change_report.md`. Every write is individually approval-gated, and the PR is the paper trail a human reviews and merges — acceptance is your act, not the agent's. The sandbox files are offered for direct download too. Your original is never modified.
 
 ## Why TrueForge (and not a script, and not a chatbot)
 
@@ -47,10 +47,10 @@ difference, and every capability below is load-bearing:
 | TrueForge capability | What it does in Cleanroom |
 |---|---|
 | Sandbox-as-tool | All profiling/fixing code runs isolated via Daytona; the user's file is never at risk |
-| Human checkpoints | MCP write/destructive tools require approval — the export itself passes through the gate |
+| Human checkpoints | GitHub MCP `@write`/`@destructive` tools require approval — every commit and the PR itself pass through the gate |
 | `ask_user_questions` | One structured round of clarification instead of silent guesses |
 | Generative UI | Findings tables and before/after previews render rich, not as markdown soup |
-| Dynamic subagents | Category canonicalization is delegated to a focused subagent via `create_sub_agent`; the root agent receives the map and counts, not the analysis — [captured run](docs/evidence/subagent-run.md) |
+| Dynamic subagents | Category canonicalization is delegated to a focused subagent via `create_sub_agent`; the root agent receives the map, the counts, and any ambiguity flagged — not the analysis — [captured run](docs/evidence/subagent-run.md) |
 | Skills (git-backed) | The `data-cleaning` methodology lives in `skills/data-cleaning/SKILL.md` in this repo — versioned, reviewable, reusable |
 | Persistent sessions | A dataset's cleaning history survives across turns — refine instead of restart |
 | Context management | Large profiling outputs offload to the sandbox instead of flooding context |
@@ -63,11 +63,15 @@ Prereqs: Node 22+, a model API key, a free [Daytona](https://daytona.io) key.
 git clone https://github.com/sreenathmmenon/cleanroom.git
 cd cleanroom
 
-./scripts/setup.sh          # launches TrueForge local mode on :3000
+./scripts/setup.sh          # launches TrueForge local mode on :8790
 # In another terminal — the scripted path (secrets stay in local .env):
-cp .env.example .env        # fill in MODEL_API_KEY + DAYTONA_API_KEY
+cp .env.example .env        # fill in MODEL_API_KEY, DAYTONA_API_KEY,
+                            # and GITHUB_TOKEN (repo scope) for PR delivery
 npm run setup:all           # configures providers + skill, then seeds the agent
-#   Settings → Connectors  add MCP "filesystem" server scoped to a workspace dir
+#   GITHUB_TOKEN registers the GitHub MCP server. Without it, configure.mjs
+#   skips that server and seed-agent.mjs drops it from the agent: profiling,
+#   planning, the approval gate, and verification all still run, but the
+#   pull-request delivery step is unavailable.
 ```
 
 Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and attach
@@ -87,12 +91,15 @@ self-explaining issues whose fixes make a compelling 3-minute walkthrough
 - Destructive steps (row drops, overwrites, exports) are individually labeled and gated.
 - The verification suite must pass before success is claimed; a failed assertion halts the run.
 - Nothing leaves the sandbox except files the user explicitly approved.
+- Delivery is a pull request, not a silent overwrite: the cleaned file and its
+  change report land on a branch for human review, and merging is the act of
+  acceptance.
 
 ## Architecture
 
 See `docs/architecture.md`. In one line: TrueForge agent ← instructions +
-skill from this repo; sandbox for compute; filesystem MCP (approval-gated) for
-export; chat UI (custom-themed embed coming) for interaction.
+skill from this repo; sandbox for compute; GitHub MCP (approval-gated) for
+delivery as a pull request; chat UI for interaction.
 
 ## Qodo Code Review Evidence
 
@@ -117,10 +124,34 @@ now the demo's signature behavior.
 |---|---|
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
-| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), MCP approvals, [dynamic subagent delegation](docs/evidence/subagent-run.md) (own thread, `thread.created`/`thread.done`), sessions, generative UI tables |
+| Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
+| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, generative UI tables |
 | Use of Qodo | Table above; every merged PR carries its review thread |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 | Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
+
+## Limitations
+
+Stated plainly, because a tool you can trust is one whose edges you know.
+
+- **CSV only.** Excel is the obvious next wedge — the profiling and fix catalog
+  are format-agnostic; only the reader changes. CSV first is a deliberate scope
+  choice, not an accident.
+- **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
+  same findings appear on every run and a judge can verify each number by hand.
+  Profiling itself is size-independent — it is pandas in a sandbox — but no
+  large-file run is published here yet, so treat behavior at scale as untested
+  rather than proven.
+- **Date inference is evidence-based, not clairvoyant.** A slash date is
+  resolved only when some row proves the order — a component greater than 12
+  cannot be a month. With no proof, or contradictory proof, the agent asks
+  rather than guesses.
+- **One clarification round, by design.** The agent asks only about ambiguities
+  that would change the fix plan, and asks them together. Questions that do not
+  change the output are not asked at all.
+- **Sandbox mode.** Runs captured here used TrueForge's local sandbox; the
+  git-backed skill loads by raw URL in that mode, and the condensed methodology
+  is embedded in the agent instructions so behavior is identical either way.
 
 ## Status & roadmap
 
@@ -130,6 +161,12 @@ now the demo's signature behavior.
 - [x] Scripted replay for judges (`npm run demo`)
 - [ ] Custom-themed embeddable UI with diff previews
 - [ ] Second dataset persona (inventory export)
+
+## Built with
+
+AI coding assistants were used during development. All code was reviewed and
+verified by the author, who can explain every part of it, and every pull request
+was reviewed by Qodo before merge.
 
 ## License
 
