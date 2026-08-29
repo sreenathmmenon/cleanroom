@@ -89,13 +89,19 @@ fixed seed by `scripts/make_large_corpus.py`, which counts every issue *as it
 plants it* and writes the counts to `data/samples/large_manifest.json`. The
 profiling run is then scored against ground truth rather than believed.
 
-**Ten of ten planted issue classes were detected exactly** — 41 duplicate rows,
-2,002 slash dates, 1,009 text dates, 68 broken totals, 68 missing customers, 23
-negative quantities, 27 `USD` suffixes, and the nulls in each financial column —
-with no false positives, in about three minutes. The two category classes
-reconcile too: of 4,114 planted region variants the agent canonicalized 3,309
-and **refused to decide 805**, flagging `New York` as possibly the city or the
-state and asking instead.
+**Twelve of twelve planted issue classes were detected exactly** — 41 duplicate
+rows, **28 near-duplicates that share an order id and differ only in case and
+whitespace**, 2,002 slash dates, 1,009 text dates, 68 broken totals, 12,426
+thousands separators, 68 missing customers, 23 negative quantities, 27 `USD`
+suffixes, and the nulls in each financial column — with no false positives, in
+152 seconds. The near-duplicates are the ones a plain `drop_duplicates()`
+misses, and the agent separated the 138 duplicate-key rows into 82 exact copies
+and 56 cosmetic-only rows across 28 pairs, unprompted.
+
+The category classes reconcile rather than tick: of 4,126 planted region
+variants the canonical map would change 3,318, and the gap is `New York` — which
+the agent **refused to fold into `NYC` without asking**, because it may be the
+city or the state.
 
 Profiling is size-independent because it is pandas in a sandbox, and the run
 demonstrates the harness's context management doing real work: the per-row
@@ -150,7 +156,7 @@ now the demo's signature behavior.
 
 | Criterion | Evidence |
 |---|---|
-| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [10/10 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
+| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
 | Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
 | Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
