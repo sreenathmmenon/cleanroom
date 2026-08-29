@@ -26,7 +26,7 @@ if (existsSync(join(root, ".env"))) {
   }
 }
 
-const base = (process.env.TRUEFORGE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const base = (process.env.TRUEFORGE_URL ?? "http://localhost:8790").replace(/\/$/, "");
 const CSV_URL = `${process.env.DEMO_CSV_URL ?? "https://raw.githubusercontent.com/sreenathmmenon/cleanroom/main/data/samples/sales_export_messy.csv"}`;
 
 const api = async (path, data) => {
