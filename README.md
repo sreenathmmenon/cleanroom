@@ -79,6 +79,34 @@ Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and att
 exact duplicates from a double import, a near-duplicate, three date formats,
 currency strings, region variants, nulls, a negative quantity, and wrong totals.
 
+<a id="scale"></a>
+
+## Does it hold up at size?
+
+The 42-row corpus is small so you can check every number by hand. That is also
+its limit, so there is a second corpus of **10,000 rows** — generated with a
+fixed seed by `scripts/make_large_corpus.py`, which counts every issue *as it
+plants it* and writes the counts to `data/samples/large_manifest.json`. The
+profiling run is then scored against ground truth rather than believed.
+
+**Ten of ten planted issue classes were detected exactly** — 41 duplicate rows,
+2,002 slash dates, 1,009 text dates, 68 broken totals, 68 missing customers, 23
+negative quantities, 27 `USD` suffixes, and the nulls in each financial column —
+with no false positives, in about three minutes. The two category classes
+reconcile too: of 4,114 planted region variants the agent canonicalized 3,309
+and **refused to decide 805**, flagging `New York` as possibly the city or the
+state and asking instead.
+
+Profiling is size-independent because it is pandas in a sandbox, and the run
+demonstrates the harness's context management doing real work: the per-row
+detail went to sandbox files and only the summary table entered the
+conversation. Full numbers and transcript in
+[`docs/evidence/scale-run.md`](docs/evidence/scale-run.md).
+
+```bash
+python3 scripts/make_large_corpus.py   # regenerates the identical corpus + manifest
+```
+
 ## Sample dataset
 
 `data/samples/sales_export_messy.csv` is the demo corpus: deterministic,
@@ -122,7 +150,8 @@ now the demo's signature behavior.
 
 | Criterion | Evidence |
 |---|---|
-| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
+| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [10/10 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
+| Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
 | Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
 | Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, generative UI tables |
@@ -139,9 +168,8 @@ Stated plainly, because a tool you can trust is one whose edges you know.
   choice, not an accident.
 - **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
   same findings appear on every run and a judge can verify each number by hand.
-  Profiling itself is size-independent — it is pandas in a sandbox — but no
-  large-file run is published here yet, so treat behavior at scale as untested
-  rather than proven.
+  A [10,000-row run](docs/evidence/scale-run.md) is published alongside it,
+  scored against a generated manifest of ground truth.
 - **Date inference is evidence-based, not clairvoyant.** A slash date is
   resolved only when some row proves the order — a component greater than 12
   cannot be a month. With no proof, or contradictory proof, the agent asks
