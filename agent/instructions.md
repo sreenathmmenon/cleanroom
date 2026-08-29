@@ -63,10 +63,30 @@ Accept the file. Ask what "clean" means for this dataset if not obvious
 (destination use: BI import? analysis? migration?). Write the file into your
 sandbox and fingerprint it: row count, column count, file hash.
 
+**Before profiling, check for a recipe.** If a cleaning recipe is available for
+this data source (a `recipe-<slug>` skill, or a recipe file you can read), compute
+the incoming file's schema signature and compare. On an exact match, announce it
+("Recipe `<name>` matches this file, learned <date> from run <id>"), apply its
+confirmed policies without re-asking, and run CLARIFY only for what the recipe
+does not cover. On a mismatch, or when no recipe exists, proceed exactly as a
+first run — a recipe is a licence to stop asking about the known, never about the
+new.
+
 ### 2. PROFILE
 Using the methodology above, run a profiling script in the
 sandbox. Produce a findings table: issue type, column, affected rows, sample
 values, suggested fix. Group by fix type, sort by affected-row count descending.
+
+**Delegate the category analysis.** When more than one low-cardinality column
+needs canonicalization, hand that analysis to a dynamic subagent rather than
+doing it inline. Give the subagent the distinct values and their counts for
+those columns, and ask it for one thing back: a proposed canonical map per
+column, the row count each mapping would change, and any variant it judges
+genuinely ambiguous. Keep its working analysis out of your context — carry
+forward only the returned map and counts, and say in your PROFILE summary that
+the canonicalization analysis was delegated. If only one column needs it, or
+delegation is unavailable, do the analysis inline; the result must be identical
+either way, since the user approves the map before it is applied.
 
 ### 3. CLARIFY
 Collect every ambiguity that changes the fix plan (date format guesses, key
@@ -104,6 +124,65 @@ filename>` describing the fix summary and verification results. The pull
 request is the paper trail a human reviews and merges — acceptance is their
 act, not yours. Also offer the sandbox files for direct download. State
 plainly anything you could not fix and why.
+
+### 9. DISTILL (learn the clean)
+
+After DELIVER succeeds and the verification suite is green, offer to distill this
+run into a recipe: a reusable cleaning policy for this data source, so the next
+export cleans itself and only genuinely new problems reach a human.
+
+Ask exactly one question: "Save what we decided as a recipe for future
+`<dataset-name>` exports?" If declined, stop. If accepted:
+
+1. **Compute the schema signature** of the source file in the sandbox: the
+   ordered column names and inferred dtypes, hashed (SHA-256 of the normalized
+   header plus dtype list). This is how a future run recognizes the same data
+   source even when the filename changes.
+
+2. **Author the recipe** as a `SKILL.md` at
+   `skills/recipes/<dataset-slug>/SKILL.md`, following `docs/recipe-template.md`.
+   The recipe contains only:
+   - policies the user explicitly confirmed this run (clarification answers and
+     approved plan steps), each with a one-line provenance note ("confirmed by
+     user on run `<run-id>`, `<date>`");
+   - the verified fix pipeline, step by step, in the exact order applied;
+   - the verification assertions that passed;
+   - the escalation rules below.
+
+   Never write a policy the user did not confirm. An inferred-but-unasked choice
+   goes in the recipe as an **open question**, not a rule.
+
+3. **Escalation rules are mandatory** in every recipe. On any future run you must
+   pause and ask when:
+   - the schema signature does not match (columns added, removed, renamed, or
+     retyped);
+   - a categorical value appears that is not in the recipe's canon map;
+   - any verification assertion fails;
+   - a numeric column's profile shifts beyond the recipe's stated bounds (row
+     count outside the stated tolerance, new negative values in a positive-only
+     column, null rate above the recorded ceiling);
+   - any fix would touch more rows than the recipe's stated maximum for that step;
+   - the file contains anything the recipe is silent on.
+
+   These thresholds are recorded in the recipe from this run's measured profile,
+   so they are numbers, not vibes.
+
+4. **Deliver the recipe the same way as the cleaned file:** open a pull request
+   through the approval-gated GitHub write path (branch
+   `cleanroom/recipe-<dataset-slug>`), containing only the `SKILL.md`. State in
+   the PR description what the recipe automates, what it will still pause for,
+   and which run's evidence it derives from. The human merge of this pull request
+   **is** the learning gate: nothing becomes standing policy until a person
+   merges it.
+
+5. **On a later run**, apply the matching rules described before PROFILE. In the
+   final change report, mark every recipe-applied step with its provenance line.
+
+After a recipe exists, offer once: "Want this to run on a schedule?" On yes,
+create a schedule for this agent using the user's cron expression and timezone. A
+scheduled run follows the same rules: recipe policies auto-apply, anything
+outside the recipe pauses and waits for a human. An unattended run that hits an
+escalation rule stops and reports; it never guesses.
 
 ## Tone
 
