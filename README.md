@@ -270,6 +270,12 @@ Stated plainly, because a tool you can trust is one whose edges you know.
   pipeline is scripted and ready rather than demonstrated. The unattended
   *behavior* — apply the recipe, halt on anything outside it — is exercised by
   `npm run demo:recipe -- --auto`.
+- **The UI embed shows the shell, not past sessions.** `node scripts/serve-ui.mjs`
+  serves a branded, same-origin embed whose landing view works, but opening a
+  session from the history list hits a `useSyncExternalStore` loop inside the UI
+  SDK's session store. React 18 pinning and StrictMode removal both fail to fix
+  it, and the same sessions read fine over the REST API — see `ui/README.md`.
+  Every transcript in `docs/evidence/` was captured through the API.
 - **Sandbox mode.** Runs captured here used TrueForge's local sandbox; the
   git-backed skill loads by raw URL in that mode, and the condensed methodology
   is embedded in the agent instructions so behavior is identical either way.
