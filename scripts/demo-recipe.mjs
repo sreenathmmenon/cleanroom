@@ -2,8 +2,11 @@
 /**
  * Cleanroom recipe replay — the second run, where the agent already knows.
  *
- *   npm run demo:recipe            interactive: gates and questions pause
- *   npm run demo:recipe -- --auto  unattended: gates auto-approved (b-roll)
+ *   npm run demo:recipe             interactive: gates and questions pause
+ *   npm run demo:recipe -- --auto   unattended: halts on any escalation
+ *   npm run demo:recipe -- --refuse the refusal path: a renamed column means
+ *                                   the signature cannot match, so the recipe
+ *                                   must be declined
  *
  * Act two of the demo. The first run (`npm run demo`) ends by distilling a
  * recipe and delivering it as a pull request; once a human merges it, this
@@ -31,9 +34,16 @@ if (existsSync(join(root, ".env"))) {
 }
 
 const base = (process.env.TRUEFORGE_URL ?? "http://localhost:8790").replace(/\/$/, "");
+
+// --refuse points the same replay at a corpus whose schema signature cannot
+// match the recipe (one column renamed), so the run must decline to apply it and
+// fall back to first-run behavior. The recipe is only trustworthy on the files
+// it covers if it is refused on the ones it does not.
+const REFUSE = process.argv.includes("--refuse");
+const RAW = "https://raw.githubusercontent.com/sreenathmmenon/cleanroom/main/data/samples";
 const CSV_URL =
   process.env.DEMO_WEEK2_CSV_URL ??
-  "https://raw.githubusercontent.com/sreenathmmenon/cleanroom/main/data/samples/sales_export_messy_week2.csv";
+  (REFUSE ? `${RAW}/tests/week2_renamed_column.csv` : `${RAW}/sales_export_messy_week2.csv`);
 
 const api = async (path, data) => {
   const res = await fetch(`${base}${path}`, {
@@ -160,7 +170,11 @@ if (!health?.ok) {
 const { data: session } = await api("/api/v1/sessions", { agent: { name: "cleanroom" } });
 console.log(`Cleanroom recipe replay — session ${session.id} — ${AUTO ? "AUTO" : "INTERACTIVE"} mode`);
 console.log(`Dataset: ${CSV_URL}`);
-console.log(`Watch for: no questions about dates, duplicates, or known regions — and one pause on "southwest".\n`);
+console.log(
+  REFUSE
+    ? `Watch for: the agent REFUSING the recipe — this file's schema signature cannot match.\n`
+    : `Watch for: no questions about dates, duplicates, or known regions — and one pause on "southwest".\n`,
+);
 
 const request = `A new export arrived for the same data source: ${CSV_URL}
 

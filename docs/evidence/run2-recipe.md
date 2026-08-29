@@ -58,6 +58,9 @@ into this test — the recipe carried the number, and the agent enforced it.
 
 Both went into a single question:
 
+Verbatim, including one error — the order number is wrong, and is annotated
+below the block:
+
 ```json
 {
   "question": "Two recipe escalation items need one decision: the schema matches, but this export has 15 rows (below the recipe's 34–50 measured range), and order 1051 has the new region label `southwest`. How should I plan the run?",
@@ -73,9 +76,10 @@ The third option is the one that matters: the agent offers to abandon its own
 recipe and start fresh. A standing policy is a convenience it will give up, not
 a position it defends.
 
-**One error, recorded rather than edited out.** The question says order `1051`
-carries `southwest`. It does not — `southwest` is on order **1048**; order 1051
-is `East`. The count (one row) and the value are right, and nothing was applied,
+**⚠️ The order number in that question is wrong.** It says `1051` carries
+`southwest`. It does not — `southwest` is on order **1048**; order 1051 is
+`East`. The quote above is reproduced unedited because it is the record of what
+the agent actually said, not because the number is right. The count (one row) and the value are right, and nothing was applied,
 so no data was affected; but the decision record points at the wrong source row,
 and a user answering this question would have looked up the wrong order. The
 escalation fired correctly and the identification did not. Worth stating plainly:
@@ -193,9 +197,10 @@ The schema signature matches exactly: `d97e2515…b0b83f`, so the recipe is appl
 ## Reproducing this
 
 ```bash
-npm run check:recipe-guard      # asserts the signature gate, exits non-zero if it breaks
-npm run demo:recipe             # interactive: the one question pauses for you
-npm run demo:recipe -- --auto   # unattended: halts on the escalation, exit 2
+npm run check:recipe-guard        # asserts the signature gate, exits non-zero if it breaks
+npm run demo:recipe               # interactive: the one question pauses for you
+npm run demo:recipe -- --auto     # unattended: halts on the escalation, exit 2
+npm run demo:recipe -- --refuse   # the refusal path, against the renamed-column fixture
 ```
 
 `check:recipe-guard` is the executable half of this evidence. It recomputes the
