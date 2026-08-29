@@ -50,7 +50,7 @@ difference, and every capability below is load-bearing:
 | Human checkpoints | MCP write/destructive tools require approval — the export itself passes through the gate |
 | `ask_user_questions` | One structured round of clarification instead of silent guesses |
 | Generative UI | Findings tables and before/after previews render rich, not as markdown soup |
-| Dynamic subagents | Column-type inference and category canonicalization delegate to focused subagents, keeping the root context clean |
+| Dynamic subagents | Category canonicalization is delegated to a focused subagent via `create_sub_agent`; the root agent receives the map and counts, not the analysis — [captured run](docs/evidence/subagent-run.md) |
 | Skills (git-backed) | The `data-cleaning` methodology lives in `skills/data-cleaning/SKILL.md` in this repo — versioned, reviewable, reusable |
 | Persistent sessions | A dataset's cleaning history survives across turns — refine instead of restart |
 | Context management | Large profiling outputs offload to the sandbox instead of flooding context |
@@ -117,7 +117,7 @@ now the demo's signature behavior.
 |---|---|
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
-| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), MCP approvals, dynamic subagents (isolated retry observed), sessions, generative UI tables |
+| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), MCP approvals, [dynamic subagent delegation](docs/evidence/subagent-run.md) (own thread, `thread.created`/`thread.done`), sessions, generative UI tables |
 | Use of Qodo | Table above; every merged PR carries its review thread |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 | Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
