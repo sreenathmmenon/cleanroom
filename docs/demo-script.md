@@ -22,6 +22,7 @@ project — it shows the questions *not* being asked.
 | Time | Beat | On screen | Voiceover (gist) |
 |---|---|---|---|
 | +0:00 | A week later | `npm run demo:recipe` against `sales_export_messy_week2.csv` | "Next week's export. Same source, same problems." |
+|  | *(setup)* | Nothing extra to install: the recipe is in the repo at `skills/recipes/sales-export/SKILL.md`, and the replay hands the agent its URL. On a container sandbox, `npm run recipe:register -- sales-export && npm run seed` attaches it as a skill instead. | |
 | +0:10 | Recognition | The agent announcing the recipe and its matching signature | "It recognizes the file by its schema, and it remembers what you decided." |
 | +0:20 | Silence | Scroll past the profile: no questions about dates, duplicates, currency, regions | "Last week that cost five questions. This week, none of them." |
 | +0:30 | **One pause** | The single question: an unseen `southwest`, plus a row count outside the recipe's recorded bounds | "It stops for exactly one thing — the value it has never seen. A recipe lets it stop asking about the known, never about the new." |

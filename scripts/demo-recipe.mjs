@@ -8,6 +8,10 @@
  *                                   the signature cannot match, so the recipe
  *                                   must be declined
  *
+ * The recipe is read from skills/recipes/sales-export/SKILL.md in this repo
+ * (override with RECIPE_URL). Attached-skill loading is preferred where the
+ * sandbox supports it; see npm run recipe:register.
+ *
  * Act two of the demo. The first run (`npm run demo`) ends by distilling a
  * recipe and delivering it as a pull request; once a human merges it, this
  * script runs the same agent against a fresh export with the same schema.
@@ -185,14 +189,26 @@ console.log(
     : `Watch for: no questions about dates, duplicates, or known regions — and one pause on "southwest".\n`,
 );
 
+// Where the recipe lives. A container sandbox gets it as an attached skill (see
+// npm run recipe:register), but a local sandbox cannot install git skills, so
+// the replay hands over the raw URL and lets the agent use its documented
+// fallback. Override RECIPE_URL to demo a different recipe.
+const RECIPE_URL =
+  process.env.RECIPE_URL ??
+  "https://raw.githubusercontent.com/sreenathmmenon/cleanroom/main/skills/recipes/sales-export/SKILL.md";
+
 const request = `A new export arrived for the same data source: ${CSV_URL}
 
-Clean it end-to-end per your workflow. Before profiling, check whether a
-cleaning recipe matches this file's schema signature; if one does, announce it
+A cleaning recipe exists for this data source. If it is not attached as a skill,
+read it at ${RECIPE_URL}
+
+Clean the export end-to-end per your workflow. Before profiling, check the
+recipe's schema signature against this file; if it matches, announce the recipe
 with its provenance and apply its confirmed policies without asking me about
-them again. Ask only about what the recipe does not cover. Everything else is
-unchanged: measured findings, a labelled plan, my approval before anything
-destructive, and verification before you claim success.`;
+them again. Ask only about what the recipe does not cover, and if the signature
+does not match, do not use the recipe at all. Everything else is unchanged:
+measured findings, a labelled plan, my approval before anything destructive, and
+verification before you claim success.`;
 
 const { status } = await runTurn(session.id, [{ type: "user.message", content: request }], "RECIPE MATCH → PROFILE → PLAN");
 if (status !== "done") {
