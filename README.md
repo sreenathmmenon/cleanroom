@@ -65,9 +65,13 @@ cd cleanroom
 
 ./scripts/setup.sh          # launches TrueForge local mode on :8790
 # In another terminal — the scripted path (secrets stay in local .env):
-cp .env.example .env        # fill in MODEL_API_KEY + DAYTONA_API_KEY
+cp .env.example .env        # fill in MODEL_API_KEY, DAYTONA_API_KEY,
+                            # and GITHUB_TOKEN (repo scope) for PR delivery
 npm run setup:all           # configures providers + skill, then seeds the agent
-#   (GITHUB_TOKEN in .env registers the GitHub MCP server — the delivery gate)
+#   GITHUB_TOKEN registers the GitHub MCP server. Without it, configure.mjs
+#   skips that server and seed-agent.mjs drops it from the agent: profiling,
+#   planning, the approval gate, and verification all still run, but the
+#   pull-request delivery step is unavailable.
 ```
 
 Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and attach
@@ -120,7 +124,7 @@ now the demo's signature behavior.
 |---|---|
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
-| Persistent sessions | A run spans many turns on one session; refreshing the browser mid-apply reattaches and the stream resumes — shown in the demo at ~2:30 |
+| Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
 | Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, persistent sessions (a run spans many turns; reconnect resumes the stream), generative UI tables |
 | Use of Qodo | Table above; every merged PR carries its review thread |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
@@ -135,7 +139,9 @@ Stated plainly, because a tool you can trust is one whose edges you know.
   choice, not an accident.
 - **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
   same findings appear on every run and a judge can verify each number by hand.
-  See the [scale run](#scale) for measured behavior on a 10,000-row file.
+  Profiling itself is size-independent — it is pandas in a sandbox — but no
+  large-file run is published here yet, so treat behavior at scale as untested
+  rather than proven.
 - **Date inference is evidence-based, not clairvoyant.** A slash date is
   resolved only when some row proves the order — a component greater than 12
   cannot be a month. With no proof, or contradictory proof, the agent asks
