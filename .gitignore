@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 
+# local-only planning docs (never commit)
+AGENTS.md
+PROJECT.md
+PROJECT/
+
 # node
 node_modules/
 dist/

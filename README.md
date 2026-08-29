@@ -64,13 +64,10 @@ git clone https://github.com/sreenathmmenon/cleanroom.git
 cd cleanroom
 
 ./scripts/setup.sh          # launches TrueForge local mode on :3000
-# In the TrueForge UI (one-time):
-#   Settings → Models    add your provider key
-#   Settings → Sandbox   add Daytona key
+# In another terminal — the scripted path (secrets stay in local .env):
+cp .env.example .env        # fill in MODEL_API_KEY + DAYTONA_API_KEY
+npm run setup:all           # configures providers + skill, then seeds the agent
 #   Settings → Connectors  add MCP "filesystem" server scoped to a workspace dir
-#   Settings → Skills    add git skill: url = this repo, path = skills/data-cleaning
-
-npm run seed                # creates/updates the Cleanroom agent via API
 ```
 
 Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and attach
