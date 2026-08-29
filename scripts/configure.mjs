@@ -30,8 +30,8 @@ if (existsSync(envPath)) {
 }
 
 const base = (env.TRUEFORGE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const redact = (s) =>
-  s ? `${String(s).slice(0, 6)}…${String(s).slice(-2)} (${String(s).length} chars)` : "(empty)";
+// No key fragments in logs — presence and length only.
+const redact = (s) => (s ? `set (${String(s).length} chars)` : "(empty)");
 const api = (path, init) =>
   fetch(`${base}${path}`, {
     ...init,

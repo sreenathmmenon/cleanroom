@@ -21,8 +21,10 @@ or a clean bill of health.
   fully null
 - **Duplicates**: exact duplicate rows; near-duplicates on the logical key
   (same id/date/amount with cosmetic differences)
-- **Dates**: for each candidate column, sample 50 values, test parseability under
-  `%Y-%m-%d`, `%d/%m/%Y`, `%m/%d/%Y`, ISO with time; report mixed-format counts
+- **Dates**: for each candidate column, test parseability under ISO (`%Y-%m-%d`),
+  text (`%b %d %Y`, `%d %b %Y`), and slash formats. For slash values, infer
+  day-first vs month-first **from unambiguous rows** (a component > 12 proves its
+  side); report the inference, its evidence, and any residual ambiguity
 - **Numbers-as-text**: currency symbols, thousands separators, unit suffixes
   ("1.2k", "3,400.00 USD"), parentheses negatives "(450.00)"
 - **Categories**: distinct values per low-cardinality column; flag variants that
@@ -56,13 +58,28 @@ Rules of engagement for fixes:
 ## 3. Pandas patterns
 
 ```python
-# Mixed dates: parse per-format, never let pandas guess
+# Mixed dates: INFER the slash-order from unambiguous rows, never guess it.
+# Evidence rule: in 29/03/2026 the 29 cannot be a month → day-first is proven.
+# If evidence is missing or contradictory, return None and ASK the user.
+def infer_slash_format(values):
+    day_first = sum(1 for v in values if int(v.split("/")[0]) > 12)
+    month_first = sum(1 for v in values if int(v.split("/")[1]) > 12)
+    if day_first and not month_first:
+        return "%d/%m/%Y"
+    if month_first and not day_first:
+        return "%m/%d/%Y"
+    return None  # ambiguous or mixed → must be clarified with the user
+
 def parse_dates(s):
-    out = pd.Series(pd.NaT, index=s.index, dtype="datetime64[ns]")
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"):
+    out = pd.to_datetime(s, format="%Y-%m-%d", errors="coerce")            # ISO
+    for fmt in ("%b %d %Y", "%d %b %Y"):                                    # Mar 6 2026 / 6 Mar 2026
         mask = out.isna()
-        out.loc[mask] = pd.to_datetime(s[mask], format=fmt, errors="coerce")
-    return out
+        out[mask] = pd.to_datetime(s[mask], format=fmt, errors="coerce")
+    slash_mask = s.astype(str).str.fullmatch(r"\d{1,2}/\d{1,2}/\d{4}").fillna(False)
+    fmt = infer_slash_format(s[slash_mask]) if slash_mask.any() else None
+    if fmt:
+        out[slash_mask] = pd.to_datetime(s[slash_mask], format=fmt, errors="coerce")
+    return out, fmt  # fmt is None → report the ambiguity; do not pick silently
 
 # Currency text → numeric
 money = (
