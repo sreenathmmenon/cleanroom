@@ -11,6 +11,7 @@
     "demo": "node scripts/demo.mjs",
     "demo:recipe": "node scripts/demo-recipe.mjs",
     "recipe:register": "node scripts/register-recipe.mjs",
+    "recipe:schedule": "node scripts/schedule-recipe.mjs",
     "check:recipe-guard": "node scripts/check-recipe-guard.mjs"
   },
   "engines": {

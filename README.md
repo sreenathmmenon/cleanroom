@@ -49,7 +49,7 @@ difference, and every capability below is load-bearing:
 | Sandbox-as-tool | All profiling/fixing code runs isolated via Daytona; the user's file is never at risk |
 | Human checkpoints | GitHub MCP `@write`/`@destructive` tools require approval — every commit and the PR itself pass through the gate |
 | `ask_user_questions` | One structured round of clarification instead of silent guesses |
-| Generative UI | Findings tables and before/after previews render rich, not as markdown soup |
+| Generative UI | Enabled on the agent; findings and previews are emitted as structured tables the chat UI renders. The OpenUI block format is not documented, so this is the harness's default rendering rather than a custom component |
 | Dynamic subagents | Category canonicalization is delegated to a focused subagent via `create_sub_agent`; the root agent receives the map, the counts, and any ambiguity flagged — not the analysis — [captured run](docs/evidence/subagent-run.md) |
 | Skills (git-backed) | The `data-cleaning` methodology lives in `skills/data-cleaning/SKILL.md` in this repo — versioned, reviewable, reusable |
 | Persistent sessions | A dataset's cleaning history survives across turns — refine instead of restart |
@@ -72,6 +72,13 @@ npm run setup:all           # configures providers + skill, then seeds the agent
 #   skips that server and seed-agent.mjs drops it from the agent: profiling,
 #   planning, the approval gate, and verification all still run, but the
 #   pull-request delivery step is unavailable.
+```
+
+For the branded embed instead of the stock chat UI:
+
+```bash
+npm --prefix ui ci && npm --prefix ui run build
+node scripts/serve-ui.mjs   # http://127.0.0.1:4174, /api proxied to TrueForge
 ```
 
 Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and attach
@@ -132,8 +139,28 @@ silently on run 2, because a human had since decided it and the recipe records
 that decision with its provenance. The question is asked once, by a person, and
 remembered.
 
-The same rules hold unattended. A scheduled run applies the recipe and stops on
-any escalation; it never guesses because nobody is watching.
+The same rules hold unattended — including the one that matters most. A
+scheduled run profiles the file, applies the recipe to a sandbox copy, verifies
+it, and then **stops at the approval gate anyway**, because an unattended run has
+nobody to approve it. It prepares the work and reports what is ready; a person
+still decides. Anything outside the recipe stops it earlier still.
+
+```bash
+npm run recipe:schedule -- --url <csv-url> --recipe sales-export --cron "0 9 * * 1" --tz Asia/Kolkata
+```
+
+The recipe is named explicitly rather than matched by schema alone: two different
+exports can share a schema, and applying one source's confirmed policies to
+another is precisely the mistake the approval model exists to prevent. The named
+recipe's signature is still checked against the file before anything is applied.
+
+Schedules are created **paused** unless you pass `--active`, so nothing runs
+before you have looked at it. One caveat, stated plainly: `/api/v1/schedules` is
+part of the TrueForge API but is not served by every build — the current release
+(0.1.4) returns 404, and the script says so rather than pretending. The agent's
+scheduled-run rules live in `agent/instructions.md` and can be exercised today
+with `npm run demo:recipe`, whose `--auto` mode halts on escalation exactly as an
+unattended run must.
 
 ### Putting a merged recipe to work
 
@@ -155,6 +182,39 @@ which path it used.
 See [`docs/recipe-template.md`](docs/recipe-template.md) for the exact structure
 the agent fills in.
 
+<a id="scale"></a>
+
+## Does it hold up at size?
+
+The 42-row corpus is small so you can check every number by hand. That is also
+its limit, so there is a second corpus of **10,000 rows** — generated with a
+fixed seed by `scripts/make_large_corpus.py`, which counts every issue *as it
+plants it* and writes the counts to `data/samples/large_manifest.json`. The
+profiling run is then scored against ground truth rather than believed.
+
+**Twelve of twelve planted issue classes were detected exactly** — 41 duplicate
+rows, **28 near-duplicates that share an order id and differ only in case and
+whitespace**, 2,002 slash dates, 1,009 text dates, 68 broken totals, 12,426
+thousands separators, 68 missing customers, 23 negative quantities, 27 `USD`
+suffixes, and the nulls in each financial column — with no false positives, in
+152 seconds. The near-duplicates are the ones a plain `drop_duplicates()`
+misses, and the agent separated the 138 duplicate-key rows into 82 exact copies
+and 56 cosmetic-only rows across 28 pairs, unprompted.
+
+The category classes reconcile rather than tick: of 4,126 planted region
+variants the canonical map would change 3,318, and the gap is `New York` — which
+the agent **refused to fold into `NYC` without asking**, because it may be the
+city or the state.
+
+Profiling is size-independent because it is pandas in a sandbox, and the run
+demonstrates the harness's context management doing real work: the per-row
+detail went to sandbox files and only the summary table entered the
+conversation. Full numbers and transcript in
+[`docs/evidence/scale-run.md`](docs/evidence/scale-run.md).
+
+```bash
+python3 scripts/make_large_corpus.py   # regenerates the identical corpus + manifest
+```
 ## Sample dataset
 
 `data/samples/sales_export_messy.csv` is the demo corpus: deterministic,
@@ -198,10 +258,11 @@ now the demo's signature behavior.
 
 | Criterion | Evidence |
 |---|---|
-| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
+| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
+| Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
 | Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
-| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, generative UI tables |
+| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, [context management at scale](docs/evidence/scale-run.md), generative UI enabled |
 | Recipes / skills | The agent authors a cleaning policy as a skill and delivers it as a PR; a human merge is what makes it policy — [run 2: five questions become one](docs/evidence/run2-recipe.md) |
 | Use of Qodo | Table above; every merged PR carries its review thread |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
@@ -216,9 +277,8 @@ Stated plainly, because a tool you can trust is one whose edges you know.
   choice, not an accident.
 - **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
   same findings appear on every run and a judge can verify each number by hand.
-  Profiling itself is size-independent — it is pandas in a sandbox — but no
-  large-file run is published here yet, so treat behavior at scale as untested
-  rather than proven.
+  A [10,000-row run](docs/evidence/scale-run.md) is published alongside it,
+  scored against a generated manifest of ground truth.
 - **Date inference is evidence-based, not clairvoyant.** A slash date is
   resolved only when some row proves the order — a component greater than 12
   cannot be a month. With no proof, or contradictory proof, the agent asks
@@ -226,6 +286,17 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - **One clarification round, by design.** The agent asks only about ambiguities
   that would change the fix plan, and asks them together. Questions that do not
   change the output are not asked at all.
+- **Schedules depend on the TrueForge build.** `/api/v1/schedules` is documented
+  in the TrueForge API but is not served by release 0.1.4, so the standing
+  pipeline is scripted and ready rather than demonstrated. The unattended
+  *behavior* — apply the recipe, halt on anything outside it — is exercised by
+  `npm run demo:recipe -- --auto`.
+- **The UI embed shows the shell, not past sessions.** `node scripts/serve-ui.mjs`
+  serves a branded, same-origin embed whose landing view works, but opening a
+  session from the history list hits a `useSyncExternalStore` loop inside the UI
+  SDK's session store. React 18 pinning and StrictMode removal both fail to fix
+  it, and the same sessions read fine over the REST API — see `ui/README.md`.
+  Every transcript in `docs/evidence/` was captured through the API.
 - **Sandbox mode.** Runs captured here used TrueForge's local sandbox; the
   git-backed skill loads by raw URL in that mode, and the condensed methodology
   is embedded in the agent instructions so behavior is identical either way.
@@ -236,8 +307,17 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - [x] End-to-end vertical slice on live TrueForge (profile → clarify → plan → gate → verify)
 - [x] Approval-gated delivery as a pull request ([PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — opened by the agent)
 - [x] Scripted replay for judges (`npm run demo`)
-- [ ] Custom-themed embeddable UI with diff previews
+- [x] Dynamic subagent delegation for category analysis ([transcript](docs/evidence/subagent-run.md))
+- [x] Recipes: the agent distills a run into a policy and delivers it as a PR
+      ([DISTILL, matching, and the recipe template](docs/recipe-template.md));
+      the run-2 and schema-refusal transcripts land with #14
+- [x] [10,000-row scale run](docs/evidence/scale-run.md) scored against a ground-truth manifest
+- [x] Branded UI embed served same-origin — build it first, then serve:
+      `npm --prefix ui ci && npm --prefix ui run build && node scripts/serve-ui.mjs`
+      (see `ui/README.md`, including what does not yet work)
+- [ ] Diff previews as custom components in the UI
 - [ ] Second dataset persona (inventory export)
+- [ ] Standing schedules, once the TrueForge build serves `/api/v1/schedules`
 
 ## Built with
 
