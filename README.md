@@ -112,8 +112,28 @@ about the **new**. The run stops and asks when:
 issues the recipe already covers — and one region value, `southwest`, that it
 has never seen. Zero questions for the known, one pause for the new.
 
-The same rules hold unattended. A scheduled run applies the recipe and stops on
-any escalation; it never guesses because nobody is watching.
+The same rules hold unattended — including the one that matters most. A
+scheduled run profiles the file, applies the recipe to a sandbox copy, verifies
+it, and then **stops at the approval gate anyway**, because an unattended run has
+nobody to approve it. It prepares the work and reports what is ready; a person
+still decides. Anything outside the recipe stops it earlier still.
+
+```bash
+npm run recipe:schedule -- --url <csv-url> --recipe sales-export --cron "0 9 * * 1" --tz Asia/Kolkata
+```
+
+The recipe is named explicitly rather than matched by schema alone: two different
+exports can share a schema, and applying one source's confirmed policies to
+another is precisely the mistake the approval model exists to prevent. The named
+recipe's signature is still checked against the file before anything is applied.
+
+Schedules are created **paused** unless you pass `--active`, so nothing runs
+before you have looked at it. One caveat, stated plainly: `/api/v1/schedules` is
+part of the TrueForge API but is not served by every build — the current release
+(0.1.4) returns 404, and the script says so rather than pretending. The agent's
+scheduled-run rules live in `agent/instructions.md` and can be exercised today
+with `npm run demo:recipe`, whose `--auto` mode halts on escalation exactly as an
+unattended run must.
 
 ### Putting a merged recipe to work
 
@@ -205,6 +225,11 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - **One clarification round, by design.** The agent asks only about ambiguities
   that would change the fix plan, and asks them together. Questions that do not
   change the output are not asked at all.
+- **Schedules depend on the TrueForge build.** `/api/v1/schedules` is documented
+  in the TrueForge API but is not served by release 0.1.4, so the standing
+  pipeline is scripted and ready rather than demonstrated. The unattended
+  *behavior* — apply the recipe, halt on anything outside it — is exercised by
+  `npm run demo:recipe -- --auto`.
 - **Sandbox mode.** Runs captured here used TrueForge's local sandbox; the
   git-backed skill loads by raw URL in that mode, and the condensed methodology
   is embedded in the agent instructions so behavior is identical either way.
