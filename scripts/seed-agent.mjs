@@ -57,6 +57,17 @@ if (connectors && connectors.ok) {
   }
 }
 
+// Attach the git-backed skill only when a container sandbox can install it;
+// local sandboxes on macOS cannot run git, so the embedded methodology covers them.
+const sandbox = await api("/api/v1/settings/sandbox-providers").catch(() => null);
+if (sandbox && sandbox.ok) {
+  const provider = (await sandbox.json()).data;
+  if (provider?.type === "daytona") {
+    spec.manifest.skills = [{ name: "data-cleaning" }];
+    console.log('Container sandbox detected — attaching git skill "data-cleaning".');
+  }
+}
+
 const res = await api("/api/v1/agents", { method: "GET" });
 if (!res.ok) {
   console.error(`Cannot reach TrueForge at ${base} (${res.status}). Is it running?`);
