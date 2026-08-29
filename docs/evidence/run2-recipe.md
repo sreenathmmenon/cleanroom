@@ -264,3 +264,41 @@ genuinely ambiguous:
 The confirmed policy did not leak across the signature boundary. A decision a
 human made about *this* schema stays attached to that schema — which is exactly
 what makes the recipe safe to trust on the files it does cover.
+
+## The same refusal, from the scripted replay
+
+`npm run demo:recipe -- --refuse` runs that path against a live agent rather
+than asserting it arithmetically. Session `01m17c7p9ekwct4gd779v7v5dv`:
+
+> I'll intake the export, preserve the downloaded original unchanged, locate the
+> data-cleaning skill and sales recipe, then compute the recipe-defined schema
+> signature **before any profiling**. A mismatch will disable the recipe entirely
+> for this run.
+
+> The recipe `sales-export` was found via the raw-URL fallback, but it does
+> **not** match. It was learned on 2026-08-29 from run
+> `01m16gcpa4tyfvm1v87j97gezp`; its signature is `d97e…b83f`, while this file is
+> `ab3f…544c`. **At position 4, the recipe expects `region:string` but received
+> `sales_region:string`.** Per the recipe's escalation rule, I am disabling it
+> completely and treating this as a first run.
+
+It located the mismatch by *column position and name*, not merely by unequal
+hashes — the reason the recipe stores its column list beside the signature.
+
+The run then profiled all 15 rows from scratch, delegated the category analysis,
+and stopped. Because this was `--auto`, the replay halted on the escalation
+instead of answering it:
+
+```
+❓ ESCALATION — a human decision is required
+```
+
+Unattended mode is not permission to guess, which is the same rule a scheduled
+run follows.
+
+Two levels cover this boundary, and both are runnable:
+
+```bash
+npm run check:recipe-guard        # arithmetic: asserts the signature gate, no server needed
+npm run demo:recipe -- --refuse   # behavioral: the agent declining a live run
+```
