@@ -179,3 +179,59 @@ The schema signature matches exactly: `d97e2515…b0b83f`, so the recipe is appl
 npm run demo:recipe        # interactive: the one question pauses for you
 npm run demo:recipe -- --auto   # unattended: halts on the escalation, exit 2
 ```
+
+---
+
+# The refusal test — a recipe that does not apply
+
+A recipe that fires on the wrong schema is worse than no recipe: it would apply
+one data source's confirmed decisions to another and call the result verified.
+So the signature check has to be a real gate, not a formality.
+
+`data/samples/tests/week2_renamed_column.csv` is the same week-2 export with one
+column renamed — `region` becomes `sales_region`. Everything else is identical.
+
+- Session `01m17b1h434ttgtcmgnexyv872`, turn `01m17b1h4kcw0w3ep0hfkqkpdq`
+- The agent was told a recipe exists and given its URL
+
+It declined to use it.
+
+> The schema check failed: the file's signature is `ab3f…544c`, not the recipe's
+> `d97e…b83f`, because expected `region:string` is now `sales_region:string`.
+> **Per the recipe, I will not apply it.**
+
+And it explained the refusal in terms of the column, not the hash:
+
+| Check | Incoming file | Recipe requirement | Decision |
+|---|---|---|---|
+| Schema signature | `ab3f7270…3ab544c` | `d97e2515…b0b83f` | **Mismatch — stop recipe** |
+| Changed schema element | `sales_region:string` | `region:string` | Renamed column requires clarification |
+| Row-count envelope | 15 rows | 34–50 rows | Escalation required |
+
+That is why the recipe stores the column list beside the hash: two unequal
+hashes tell a user nothing, and "the `region` column was renamed to
+`sales_region`" tells them everything.
+
+## It fell back to first-run behavior
+
+Having refused the recipe, the agent profiled the file from scratch and proposed
+nothing:
+
+> **The recipe does not genuinely apply, so I did not apply it.** […] Suggested
+> action — not applied.
+
+The detail worth noticing is in the delegated analysis. On run 2 the subagent
+applied `New York → NYC` silently, because the recipe recorded a human's
+decision. Here, with the recipe refused, it flags the same value as ambiguous
+again:
+
+```
+genuinely ambiguous:
+  New York: Previously resolved to NYC, but ambiguous where city and state are distinct.
+  southwest: New value; no evidence that it aliases another region, and its
+             intended canonical casing is undetermined.
+```
+
+The confirmed policy did not leak across the signature boundary. A decision a
+human made about *this* schema stays attached to that schema — which is exactly
+what makes the recipe safe to trust on the files it does cover.
