@@ -167,6 +167,15 @@ if (!health?.ok) {
   process.exit(1);
 }
 
+// The agent fetches this URL from inside its sandbox, so a 404 would surface as
+// a confusing mid-run failure. Check it here, where the message can be useful.
+const corpus = await fetch(CSV_URL, { method: "HEAD" }).catch(() => null);
+if (!corpus?.ok) {
+  console.error(`Corpus not reachable: ${CSV_URL} (${corpus ? corpus.status : "network error"}).`);
+  console.error("Override with DEMO_WEEK2_CSV_URL, or point it at a branch where the file exists.");
+  process.exit(1);
+}
+
 const { data: session } = await api("/api/v1/sessions", { agent: { name: "cleanroom" } });
 console.log(`Cleanroom recipe replay — session ${session.id} — ${AUTO ? "AUTO" : "INTERACTIVE"} mode`);
 console.log(`Dataset: ${CSV_URL}`);
