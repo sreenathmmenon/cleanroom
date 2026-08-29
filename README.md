@@ -115,9 +115,13 @@ has never seen.
 [It works](docs/evidence/run2-recipe.md). Run 2 verified the signature, announced
 the recipe with its provenance, and applied the confirmed policies **without
 asking anything about dates, duplicates, currency, or the known regions** — the
-five questions of run 1, gone. It asked exactly one question, in 71 seconds, and
-that question covered two escalations rather than one: the planted `southwest`
-value, *and* a row count outside the recipe's own recorded `42 ± 20%` bound.
+five questions of run 1, gone. It reached its first pause in 71 seconds with one
+question, and that question covered two escalations rather than one: the planted
+`southwest` value, *and* a row count outside the recipe's own recorded
+`42 ± 20%` bound. (The capture ends at that pause, which is where the run waits
+for a human; the full apply-verify-deliver cycle is in the
+[flagship run](docs/evidence/flagship-run.md). The agent also misnamed the row
+carrying `southwest` — the evidence file records that.)
 Nothing scripted that second check — the recipe carried the number and the agent
 enforced it. Among the options it offered: abandon the recipe and treat this as a
 first run. A standing policy is a convenience it will give up, not a position it
