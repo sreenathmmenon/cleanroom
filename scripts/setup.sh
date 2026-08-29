@@ -13,11 +13,11 @@ fi
 echo "Node $(node --version) ✓"
 
 say "Launching TrueForge (local mode)"
-echo "First run downloads the package (~1 min). UI: http://localhost:3000"
+echo "First run downloads the package (~1 min). UI: http://localhost:8790"
 echo "In the TrueForge UI, configure once (Settings → ...):"
 echo "  1. Models   — add a provider API key"
 echo "  2. Sandbox  — add the Daytona API key (free tier: https://daytona.io)"
-echo "  3. Connectors — add an MCP 'filesystem' server scoped to a workspace dir"
+echo "  3. Connectors — the GitHub MCP server (delivery gate); GITHUB_TOKEN in .env registers it"
 echo "  4. Skills   — add the git skill: repo <this repo>, path skills/data-cleaning"
 echo ""
 echo "Then, in another terminal:  npm run seed"

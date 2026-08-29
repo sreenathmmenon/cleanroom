@@ -6,7 +6,7 @@
  * agent/instructions.md, then creates or replaces the agent via the API.
  *
  * Env:
- *   TRUEFORGE_URL  base URL of the TrueForge server (default http://localhost:3000)
+ *   TRUEFORGE_URL  base URL of the TrueForge server (default http://localhost:8790)
  *   MODEL_FQN      override model, e.g. "openai/gpt-5.2" (default from manifest)
  *
  * No external dependencies — Node 22+ (built-in fetch).
@@ -27,7 +27,7 @@ if (existsSync(join(root, ".env"))) {
     }
   }
 }
-const base = (process.env.TRUEFORGE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const base = (process.env.TRUEFORGE_URL ?? "http://localhost:8790").replace(/\/$/, "");
 const model = process.env.MODEL_FQN;
 
 const spec = JSON.parse(readFileSync(join(root, "agent", "cleanroom.agent.json"), "utf8"));
