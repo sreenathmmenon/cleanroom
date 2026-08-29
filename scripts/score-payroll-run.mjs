@@ -186,17 +186,29 @@ const REFERENCE = {
   repeated_employee_year_groups: repeated.length,
 };
 
-// Where the reference JSON records the same quantity, it must agree too.
+// Cross-check the reference JSON. Same-named keys compare directly; values it
+// stores under a different shape are mapped explicitly, so nothing is skipped
+// merely because the names differ.
 const REF_JSON = reference.measured ?? {};
-let jsonMismatch = 0;
-for (const [k, v] of Object.entries(REFERENCE)) {
-  if (k in REF_JSON && REF_JSON[k] !== v) {
-    console.error(`Reference JSON disagrees on ${k}: ${REF_JSON[k]} vs recomputed ${v}`);
-    jsonMismatch++;
+const refExpected = new Map();
+for (const k of Object.keys(REFERENCE)) {
+  if (k in REF_JSON) refExpected.set(k, REF_JSON[k]);
+}
+refExpected.set("rows", reference.shape?.rows);
+refExpected.set("columns", reference.shape?.columns);
+
+let refFailed = 0;
+for (const [k, expected] of refExpected) {
+  if (expected === undefined) {
+    console.error(`Reference JSON records no value for ${k}`);
+    refFailed++;
+  } else if (expected !== REFERENCE[k]) {
+    console.error(`Reference JSON disagrees on ${k}: ${expected} vs recomputed ${REFERENCE[k]}`);
+    refFailed++;
   }
 }
 
-let failed = jsonMismatch;
+let failed = 0;
 console.log(`corpus SHA-256 ${actualSha.slice(0, 16)}… matches the evidenced run\n`);
 console.log(`${"check".padEnd(40)}${"reference".padStart(11)}${"agent".padStart(8)}`);
 console.log("-".repeat(66));
@@ -209,8 +221,15 @@ for (const [k, agent] of Object.entries(AGENT)) {
   );
 }
 console.log("-".repeat(66));
-if (failed) {
-  console.error(`\n${failed} of ${Object.keys(AGENT).length} comparisons failed.`);
+
+const agentTotal = Object.keys(AGENT).length;
+const refTotal = refExpected.size;
+if (failed || refFailed) {
+  if (failed) console.error(`\n${failed} of ${agentTotal} agent comparisons failed.`);
+  if (refFailed) console.error(`${refFailed} of ${refTotal} reference cross-checks failed.`);
   process.exit(1);
 }
-console.log(`\n${Object.keys(AGENT).length} of ${Object.keys(AGENT).length} comparisons exact.`);
+console.log(
+  `\n${agentTotal} of ${agentTotal} agent comparisons exact; ` +
+    `${refTotal} of ${refTotal} reference cross-checks agree.`,
+);
