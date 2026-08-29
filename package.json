@@ -1,0 +1,16 @@
+{
+  "name": "cleanroom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Approval-gated data-repair agent on TrueForge — drop in messy data, get back data you trust.",
+  "type": "module",
+  "scripts": {
+    "configure": "node scripts/configure.mjs",
+    "seed": "node scripts/seed-agent.mjs",
+    "setup:all": "npm run configure && npm run seed"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

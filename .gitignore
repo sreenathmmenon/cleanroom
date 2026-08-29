@@ -1,0 +1,29 @@
+# environment / secrets
+.env
+.env.*
+!.env.example
+
+# local-only planning docs (never commit)
+AGENTS.md
+PROJECT.md
+PROJECT/
+
+# node
+node_modules/
+dist/
+*.log
+
+# trueforge local state
+.trueforge/
+
+# working data (uploads, outputs) — samples are committed intentionally
+data/uploads/
+data/out/
+exports/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
