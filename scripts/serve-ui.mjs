@@ -46,6 +46,9 @@ const server = createServer((req, res) => {
       { ...upstream, path: req.url, method: req.method, headers: { ...req.headers, host: TARGET.host } },
       (up) => {
         res.writeHead(up.statusCode, up.headers);
+        // A mid-stream upstream failure must not take the server down: headers
+        // are already sent, so the only honest move is to end the response.
+        up.on("error", () => res.destroy());
         up.pipe(res); // streams SSE too
       },
     );
@@ -60,8 +63,22 @@ const server = createServer((req, res) => {
   const path = normalize(req.url.split("?")[0]).replace(/^(\.\.[/\\])+/, "");
   let file = join(DIST, path === "/" ? "index.html" : path);
   if (!existsSync(file) || statSync(file).isDirectory()) file = join(DIST, "index.html"); // SPA fallback
-  res.writeHead(200, { "content-type": MIME[extname(file)] ?? "application/octet-stream" });
-  createReadStream(file).pipe(res);
+  if (!existsSync(file)) {
+    res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+    res.end(`No UI build at ${DIST}. Build it first: npm --prefix ui ci && npm --prefix ui run build`);
+    return;
+  }
+  const stream = createReadStream(file);
+  // The file can vanish or become unreadable between the check and the open;
+  // report that as HTTP rather than an unhandled stream error.
+  stream.on("error", (err) => {
+    if (!res.headersSent) res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+    res.end(`Cannot read ${file}: ${err.code}`);
+  });
+  stream.once("open", () => {
+    res.writeHead(200, { "content-type": MIME[extname(file)] ?? "application/octet-stream" });
+    stream.pipe(res);
+  });
 });
 
 server.listen(PORT, "127.0.0.1", () => {
