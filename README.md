@@ -117,7 +117,27 @@ about the **new**. The run stops and asks when:
 
 `data/samples/sales_export_messy_week2.csv` is the second act: same schema,
 issues the recipe already covers — and one region value, `southwest`, that it
-has never seen. Zero questions for the known, one pause for the new.
+has never seen.
+
+[It works](docs/evidence/run2-recipe.md). Run 2 verified the signature, announced
+the recipe with its provenance, and applied the confirmed policies **without
+asking anything about dates, duplicates, currency, or the known regions** — the
+five questions of run 1, gone. It reached its first pause in 71 seconds with one
+question, and that question covered two escalations rather than one: the planted
+`southwest` value, *and* a row count outside the recipe's own recorded
+`42 ± 20%` bound. (The capture ends at that pause, which is where the run waits
+for a human; the full apply-verify-deliver cycle is in the
+[flagship run](docs/evidence/flagship-run.md). The agent also misnamed the row
+carrying `southwest` — the evidence file records that.)
+Nothing scripted that second check — the recipe carried the number and the agent
+enforced it. Among the options it offered: abandon the recipe and treat this as a
+first run. A standing policy is a convenience it will give up, not a position it
+defends.
+
+The same subagent that flagged `New York → NYC` as ambiguous on run 1 applied it
+silently on run 2, because a human had since decided it and the recipe records
+that decision with its provenance. The question is asked once, by a person, and
+remembered.
 
 The same rules hold unattended — including the one that matters most. A
 scheduled run profiles the file, applies the recipe to a sandbox copy, verifies
@@ -243,6 +263,7 @@ now the demo's signature behavior.
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
 | Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
 | Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, [context management at scale](docs/evidence/scale-run.md), generative UI enabled |
+| Recipes / skills | The agent authors a cleaning policy as a skill and delivers it as a PR; a human merge is what makes it policy — [run 2: five questions become one](docs/evidence/run2-recipe.md) |
 | Use of Qodo | Table above; every merged PR carries its review thread |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 | Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
