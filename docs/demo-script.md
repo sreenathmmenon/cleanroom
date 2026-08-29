@@ -14,6 +14,21 @@ irreversible moment. Cut tight, 1080p, cursor visible, no dead air.
 | 2:40–2:55 | Verified result | Verification suite green; before/after table; MCP write approval; the delivery PR opens | "Fixes applied to a copy, verified with assertions — row counts reconcile, totals recompute, pipeline is idempotent. Delivery is a pull request a human merges." |
 | 2:55–3:00 | Close | change_report.md + cleaned CSV side by side; repo URL | "Cleanroom: drop in messy data, get back data you trust. Repo in the description." |
 
+## Act two (optional, +45s): the agent already knows
+
+If the cut has room, the second run is the strongest thirty seconds in the
+project — it shows the questions *not* being asked.
+
+| Time | Beat | On screen | Voiceover (gist) |
+|---|---|---|---|
+| +0:00 | A week later | `npm run demo:recipe` against `sales_export_messy_week2.csv` | "Next week's export. Same source, same problems." |
+| +0:10 | Recognition | The agent announcing the recipe and its matching signature | "It recognizes the file by its schema, and it remembers what you decided." |
+| +0:20 | Silence | Scroll past the profile: no questions about dates, duplicates, currency, regions | "Last week that cost five questions. This week, none of them." |
+| +0:30 | **One pause** | The single question: an unseen `southwest`, plus a row count outside the recipe's recorded bounds | "It stops for exactly one thing — the value it has never seen. A recipe lets it stop asking about the known, never about the new." |
+
+The line worth landing: **the agent's memory is a pull request.** Nothing it
+learned became policy until a human merged it.
+
 ## Shot checklist
 
 - [ ] Terminal: `./scripts/setup.sh` + `npm run seed` visible for 3s (judges see it's reproducible)
@@ -21,4 +36,5 @@ irreversible moment. Cut tight, 1080p, cursor visible, no dead air.
 - [ ] Approval dialog zoomed — the money shot; no cut during the pause
 - [ ] Before/after diff readable at 1080p
 - [ ] Browser refresh mid-APPLY, stream resuming on the same session (15s)
+- [ ] Act two: the five questions that do not get asked, then the one that does
 - [ ] No secrets, no personal data anywhere in frame
