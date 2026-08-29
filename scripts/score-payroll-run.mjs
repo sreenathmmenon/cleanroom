@@ -13,11 +13,18 @@
  * Exit code is non-zero if any comparison fails. No dependencies — Node 22+.
  */
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const csvPath = join(root, "data/samples/nyc_payroll_messy.csv");
+const refPath = join(root, "data/samples/nyc_payroll_reference.json");
+
+// Matching counts is not the same as scoring the documented corpus: a different
+// file preserving the same aggregates would pass. Bind the run to its bytes.
+const AGENT_CORPUS_SHA256 =
+  "fa81f5f60b2201097b2ab5e1fc785bb22602c96c2bce8a3b09390d8cc231932a";
 
 // What the agent reported, from docs/evidence/real-payroll-run.md
 // (session 01m17xm1abdhtdw2zqf2xxwe41).
@@ -75,7 +82,25 @@ function parseCsv(text) {
   return rows;
 }
 
-const raw = parseCsv(readFileSync(csvPath, "utf8"));
+const csvBytes = readFileSync(csvPath);
+const actualSha = createHash("sha256").update(csvBytes).digest("hex");
+if (actualSha !== AGENT_CORPUS_SHA256) {
+  console.error("Corpus fingerprint does not match the evidenced run.");
+  console.error(`  expected ${AGENT_CORPUS_SHA256}`);
+  console.error(`  actual   ${actualSha}`);
+  console.error("The scored numbers describe a different file than the transcript does.");
+  process.exit(1);
+}
+
+// The reference JSON is the independently measured record; scoring must agree
+// with it as well as with the agent, or one of the three has drifted.
+const reference = JSON.parse(readFileSync(refPath, "utf8"));
+if (reference.sha256 !== AGENT_CORPUS_SHA256) {
+  console.error(`Reference JSON records a different corpus (${reference.sha256}).`);
+  process.exit(1);
+}
+
+const raw = parseCsv(csvBytes.toString("utf8"));
 const header = raw[0].map((h) => h.replace(/^"|"$/g, ""));
 const data = raw.slice(1).filter((r) => r.length === header.length);
 const col = (r, name) => r[header.indexOf(name)] ?? "";
@@ -161,7 +186,18 @@ const REFERENCE = {
   repeated_employee_year_groups: repeated.length,
 };
 
-let failed = 0;
+// Where the reference JSON records the same quantity, it must agree too.
+const REF_JSON = reference.measured ?? {};
+let jsonMismatch = 0;
+for (const [k, v] of Object.entries(REFERENCE)) {
+  if (k in REF_JSON && REF_JSON[k] !== v) {
+    console.error(`Reference JSON disagrees on ${k}: ${REF_JSON[k]} vs recomputed ${v}`);
+    jsonMismatch++;
+  }
+}
+
+let failed = jsonMismatch;
+console.log(`corpus SHA-256 ${actualSha.slice(0, 16)}… matches the evidenced run\n`);
 console.log(`${"check".padEnd(40)}${"reference".padStart(11)}${"agent".padStart(8)}`);
 console.log("-".repeat(66));
 for (const [k, agent] of Object.entries(AGENT)) {

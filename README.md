@@ -276,7 +276,8 @@ partial periods and mid-year changes. All five of its clarifying questions
 recommended **preserve and flag**, and the option a naive cleaner would pick by
 default — overwrite the 762 mismatches — was offered and not recommended.
 
-Full transcript: [`docs/evidence/real-payroll-run.md`](docs/evidence/real-payroll-run.md).
+Scoring table, the five questions, and every message and tool call from the run:
+[`docs/evidence/real-payroll-run.md`](docs/evidence/real-payroll-run.md).
 
 ## Sample dataset
 
