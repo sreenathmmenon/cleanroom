@@ -21,11 +21,12 @@ flowchart LR
 | Component | Where | Role |
 |---|---|---|
 | Agent manifest | `agent/cleanroom.agent.json` | Model, MCP servers, skill refs, runtime config — applied via `scripts/seed-agent.mjs` (PUT/POST `/api/v1/agents`) |
-| System prompt | `agent/instructions.md` | The 8-phase workflow: INTAKE → PROFILE → CLARIFY → PLAN → GATE → APPLY → VERIFY → DELIVER |
+| System prompt | `agent/instructions.md` | The 9-phase workflow: INTAKE → PROFILE → CLARIFY → PLAN → GATE → APPLY → VERIFY → DELIVER → DISTILL |
 | Skill | `skills/data-cleaning/SKILL.md` | Git-backed methodology: profiling checklist, fix catalog, pandas patterns, verification suite, change-report format |
 | Sandbox | TrueForge → Daytona | Isolated execution; `file_downloads` enabled for artifact retrieval |
 | GitHub MCP | TrueForge Connectors | Delivery: branch, commit, and open a PR — **every write requires human approval** (the formal gate) |
-| Sample corpus | `data/samples/` | Deterministic messy datasets for demos and judge reproducibility |
+| Sample corpus | `data/samples/` | Deterministic messy datasets for demos and judge reproducibility — `sales_export_messy.csv` (first run) and `sales_export_messy_week2.csv` (second run, same schema, one unseen category) |
+| Recipes | `skills/recipes/<slug>/SKILL.md` | Standing cleaning policy per data source, authored by the agent at DISTILL and delivered as a pull request — merging it is what makes it policy |
 
 ## Safety invariants
 
@@ -36,3 +37,6 @@ flowchart LR
 3. Success is claimed only after the verification suite passes; failures halt
    and report.
 4. The change report must reconcile every row: in = out + dropped (reasoned).
+5. A recipe licenses silence about the known, never about the new: an unseen
+   category, a schema change, or a profile outside recorded bounds stops the run
+   and asks — including on a scheduled, unattended run.
