@@ -34,6 +34,12 @@ const spec = JSON.parse(readFileSync(join(root, "agent", "cleanroom.agent.json")
 spec.manifest.instructions = readFileSync(join(root, "agent", "instructions.md"), "utf8");
 if (model) spec.manifest.model = { name: model };
 
+const api = (path, init) =>
+  fetch(`${base}${path}`, {
+    ...init,
+    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
+  });
+
 // Tolerate unconfigured connectors so a clean clone seeds successfully:
 // drop manifest references the server doesn't know (e.g. no GITHUB_TOKEN —
 // the delivery gate attaches once `npm run configure` registers it).
@@ -50,12 +56,6 @@ if (connectors && connectors.ok) {
     spec.manifest.mcp_servers = wanted.filter((m) => names.has(m.name));
   }
 }
-
-const api = (path, init) =>
-  fetch(`${base}${path}`, {
-    ...init,
-    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
-  });
 
 const res = await api("/api/v1/agents", { method: "GET" });
 if (!res.ok) {
