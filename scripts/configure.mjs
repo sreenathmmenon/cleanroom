@@ -74,8 +74,10 @@ if (!providerName || !env.MODEL_API_KEY) {
     body: JSON.stringify({ manifest }),
   });
   if (!r.ok) softFail(`Model provider setup failed (${r.status}): ${await r.text()}`);
-  console.log(`Model provider "${preset.type}" configured (key ${redact(env.MODEL_API_KEY)}).`);
-  console.log("Models available:", preset.models.map((m) => m.name).join(", "));
+  else {
+    console.log(`Model provider "${preset.type}" configured (key ${redact(env.MODEL_API_KEY)}).`);
+    console.log("Models available:", preset.models.map((m) => m.name).join(", "));
+  }
 }
 
 // 2. Sandbox provider: Daytona catalog preset + key.
@@ -118,4 +120,23 @@ if (errors.length) {
   console.error(`\n${errors.length} step(s) failed — fix the issues above and re-run.`);
   process.exit(1);
 }
+// 4. GitHub MCP server (delivery gate): classic PAT with repo scope.
+if (env.GITHUB_TOKEN) {
+  const manifest = {
+    name: "github",
+    type: "remote",
+    url: "https://api.githubcopilot.com/mcp/",
+    description: "Work with issues, pull requests, repository files, and CI status.",
+    auth: { type: "header", headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}` } },
+  };
+  const r = await api("/api/v1/settings/mcp-servers", {
+    method: "PUT",
+    body: JSON.stringify({ manifest }),
+  });
+  if (!r.ok) softFail(`GitHub MCP setup failed (${r.status}): ${await r.text()}`);
+  else console.log('MCP server "github" configured (delivery gate ready).');
+} else {
+  console.log("GITHUB_TOKEN not set — skipping GitHub MCP (delivery gate unavailable).");
+}
+
 console.log("\nNext: npm run seed   # then open the chat UI and try Cleanroom");
