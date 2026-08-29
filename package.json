@@ -13,7 +13,8 @@
     "recipe:register": "node scripts/register-recipe.mjs",
     "recipe:schedule": "node scripts/schedule-recipe.mjs",
     "check:recipe-guard": "node scripts/check-recipe-guard.mjs",
-    "score:real-world": "node scripts/score-real-world-run.mjs"
+    "score:real-world": "node scripts/score-real-world-run.mjs",
+    "score:payroll": "node scripts/score-payroll-run.mjs"
   },
   "engines": {
     "node": ">=22"
