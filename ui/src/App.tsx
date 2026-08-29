@@ -1,6 +1,28 @@
+import { Component, type ReactNode } from "react";
 import { TrueForgeUI } from "@truefoundry/trueforge-ui";
 
-const baseUrl = import.meta.env.VITE_TRUEFORGE_URL ?? "http://localhost:8790";
+// Same-origin by default (scripts/serve-ui.mjs proxies /api to TrueForge);
+// set VITE_TRUEFORGE_URL to target a server directly when CORS allows it.
+const baseUrl = import.meta.env.VITE_TRUEFORGE_URL ?? window.location.origin;
+
+class CrashBarrier extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <pre style={{ padding: "1rem", whiteSpace: "pre-wrap", fontSize: 12 }}>
+          UI crashed: {this.state.error.message}
+          {"\n"}
+          {this.state.error.stack?.slice(0, 1500)}
+        </pre>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   return (
@@ -29,15 +51,17 @@ export default function App() {
         </a>
       </header>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <TrueForgeUI
-          server={{ type: "trueforge", baseUrl }}
-          layout="sidebar"
-          theme={{
-            preset: "trueforge",
-            mode: "dark",
-            brand: { name: "Cleanroom" },
-          }}
-        />
+        <CrashBarrier>
+          <TrueForgeUI
+            server={{ type: "trueforge", baseUrl }}
+            layout="sidebar"
+            theme={{
+              preset: "trueforge",
+              mode: "dark",
+              brand: { name: "Cleanroom" },
+            }}
+          />
+        </CrashBarrier>
       </div>
     </div>
   );
