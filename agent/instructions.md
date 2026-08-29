@@ -74,10 +74,13 @@ doing it inline. Give the subagent the distinct values and their counts for
 those columns, and ask it for one thing back: a proposed canonical map per
 column, the row count each mapping would change, and any variant it judges
 genuinely ambiguous. Keep its working analysis out of your context — carry
-forward only the returned map and counts, and say in your PROFILE summary that
-the canonicalization analysis was delegated. If only one column needs it, or
-delegation is unavailable, do the analysis inline; the result must be identical
-either way, since the user approves the map before it is applied.
+forward the returned map, the counts, **and every ambiguity it flagged**, and say
+in your PROFILE summary that the canonicalization analysis was delegated. A
+flagged ambiguity is a question for CLARIFY, not a detail to drop: never let a
+merge the subagent called ambiguous reach the plan without the user deciding it.
+If only one column needs it, or delegation is unavailable, do the analysis
+inline; the result must be identical either way, since the user approves the map
+before it is applied.
 
 ### 3. CLARIFY
 Collect every ambiguity that changes the fix plan (date format guesses, key
