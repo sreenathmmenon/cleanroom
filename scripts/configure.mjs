@@ -32,7 +32,7 @@ if (existsSync(envPath)) {
   }
 }
 
-const base = (env.TRUEFORGE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const base = (env.TRUEFORGE_URL ?? "http://localhost:8790").replace(/\/$/, "");
 // No key fragments in logs — presence and length only.
 const redact = (s) => (s ? `set (${String(s).length} chars)` : "(empty)");
 const api = (path, init) =>
