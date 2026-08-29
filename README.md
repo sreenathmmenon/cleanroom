@@ -273,8 +273,15 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - [x] End-to-end vertical slice on live TrueForge (profile → clarify → plan → gate → verify)
 - [x] Approval-gated delivery as a pull request ([PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — opened by the agent)
 - [x] Scripted replay for judges (`npm run demo`)
-- [ ] Custom-themed embeddable UI with diff previews
+- [x] Dynamic subagent delegation for category analysis ([transcript](docs/evidence/subagent-run.md))
+- [x] Recipes: the agent distills a run into a policy and delivers it as a PR;
+      [run 2 asks one question instead of five](docs/evidence/run2-recipe.md), and
+      refuses the recipe outright when the schema changes
+- [x] [10,000-row scale run](docs/evidence/scale-run.md) scored against a ground-truth manifest
+- [x] Branded UI embed served same-origin (`node scripts/serve-ui.mjs`)
+- [ ] Diff previews as custom components in the UI
 - [ ] Second dataset persona (inventory export)
+- [ ] Standing schedules, once the TrueForge build serves `/api/v1/schedules`
 
 ## Built with
 
