@@ -249,6 +249,35 @@ corrected to match.
 Full transcript, scoring table, and the ten-part clarification:
 [`docs/evidence/real-world-run.md`](docs/evidence/real-world-run.md).
 
+### And on real money?
+
+311 data has no money in it, and the sales corpus's arithmetic defects were
+planted by the same person who wrote the arithmetic checks. So the agent was also
+pointed at 6,000 rows of
+[NYC Citywide Payroll Data](https://data.cityofnewyork.us/City-Government/Citywide-Payroll-Data-Fiscal-Year-/k397-673e)
+(CC0) — 70 agencies, 12 fiscal years, real salaries — with no description of its
+defects.
+
+**Sixteen of sixteen checks exact** (`npm run score:payroll`), including 1,068
+rows paid overtime for zero overtime hours, 223 rows carrying negative pay or
+hours, and six findings the reference script never thought to measure.
+
+But the result that matters is what it **refused** to do. On the sales corpus a
+stored `total` must equal `qty × unit_price`, so a mismatch is an error and the
+agent recomputes it. Here, 762 per-hour rows have `regular_gross_paid ≠
+base_salary × regular_hours` — and it declined to touch them:
+
+> often includes poll workers with a placeholder `$1` rate and zero hours;
+> **recomputation would corrupt pay** […] there is no stored total column against
+> which to assert equality
+
+`base_salary` is a *rate*, not an expected total; gross pay legitimately reflects
+partial periods and mid-year changes. All five of its clarifying questions
+recommended **preserve and flag**, and the option a naive cleaner would pick by
+default — overwrite the 762 mismatches — was offered and not recommended.
+
+Full transcript: [`docs/evidence/real-payroll-run.md`](docs/evidence/real-payroll-run.md).
+
 ## Sample dataset
 
 `data/samples/sales_export_messy.csv` is the demo corpus: deterministic,
@@ -293,6 +322,7 @@ now the demo's signature behavior.
 | Criterion | Evidence |
 |---|---|
 | Works on unfamiliar real data | [5,000 rows of NYC 311](docs/evidence/real-world-run.md), nothing planted: 8/8 checks exact, and it corrected the verification script three times |
+| Judgment on real money | [6,000 rows of NYC payroll](docs/evidence/real-payroll-run.md): 16/16 exact, and it refused to recompute 762 pay mismatches because no authoritative formula exists |
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
 | Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
