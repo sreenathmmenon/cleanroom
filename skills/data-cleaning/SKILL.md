@@ -100,7 +100,8 @@ canonical = (df.assign(_c=completeness)
 assert len(before) - len(after) == approved_drops, "row count must reconcile"
 assert after["order_date"].isna().sum() == 0, "post-condition: no null dates"
 assert (after["total"] - after["qty"] * after["unit_price"]).abs().max() < 0.01
-assert parse_dates(after["order_date"]).notna().all(), "all dates parse"
+parsed, _fmt = parse_dates(after["order_date"])
+assert parsed.notna().all(), "all dates parse"
 rerun = pipeline(after); assert rerun.equals(after), "pipeline must be idempotent"
 ```
 

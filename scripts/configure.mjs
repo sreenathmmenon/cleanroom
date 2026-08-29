@@ -19,13 +19,16 @@ import { dirname, join } from "node:path";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Minimal .env loader (no deps): KEY=VALUE lines, # comments, optional quotes.
+// Precedence matches seed-agent.mjs: real process env wins, .env fills gaps.
 const env = { ...process.env };
 const envPath = join(root, ".env");
 if (existsSync(envPath)) {
   for (const line of readFileSync(envPath, "utf8").split("\n")) {
     if (line.trimStart().startsWith("#")) continue;
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    if (m && process.env[m[1]] === undefined) {
+      env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    }
   }
 }
 
@@ -111,8 +114,8 @@ if (env.SKILL_REF) {
   else console.log(`Skill "data-cleaning" registered from repo @ ${env.SKILL_REF}.`);
 }
 
-console.log("\nNext: npm run seed   # then open the chat UI and try Cleanroom");
 if (errors.length) {
   console.error(`\n${errors.length} step(s) failed — fix the issues above and re-run.`);
   process.exit(1);
 }
+console.log("\nNext: npm run seed   # then open the chat UI and try Cleanroom");
