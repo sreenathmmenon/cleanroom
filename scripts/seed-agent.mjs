@@ -57,14 +57,21 @@ if (connectors && connectors.ok) {
   }
 }
 
-// Attach the git-backed skill only when a container sandbox can install it;
+// Attach git-backed skills only when a container sandbox can install them;
 // local sandboxes on macOS cannot run git, so the embedded methodology covers them.
+// Recipes the agent has authored and a human has merged are registered as skills
+// named `recipe-<slug>`; attach every one that is registered, so a second run on
+// a known data source can match its recipe instead of asking again.
 const sandbox = await api("/api/v1/settings/sandbox-providers").catch(() => null);
 if (sandbox && sandbox.ok) {
   const provider = (await sandbox.json()).data;
   if (provider?.type === "daytona") {
-    spec.manifest.skills = [{ name: "data-cleaning" }];
-    console.log('Container sandbox detected — attaching git skill "data-cleaning".');
+    const registered = await api("/api/v1/settings/skills").catch(() => null);
+    const names =
+      registered && registered.ok ? ((await registered.json()).data ?? []).map((s) => s.name) : [];
+    const attach = ["data-cleaning", ...names.filter((n) => n.startsWith("recipe-"))];
+    spec.manifest.skills = [...new Set(attach)].map((name) => ({ name }));
+    console.log(`Container sandbox detected — attaching skills: ${spec.manifest.skills.map((s) => s.name).join(", ")}.`);
   }
 }
 

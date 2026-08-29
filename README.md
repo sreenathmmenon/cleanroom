@@ -111,6 +111,23 @@ has never seen. Zero questions for the known, one pause for the new.
 The same rules hold unattended. A scheduled run applies the recipe and stops on
 any escalation; it never guesses because nobody is watching.
 
+### Putting a merged recipe to work
+
+Merging the recipe PR is the human decision; registering it is the mechanical
+step after:
+
+```bash
+npm run recipe:register -- sales-export   # register the merged recipe as a skill
+npm run seed                              # attach it to the agent
+```
+
+`seed` attaches every registered `recipe-*` skill, so the next run can match one.
+Skills load progressively — TrueForge shows the agent only each skill's name and
+description until one is relevant, so a shelf of recipes costs nothing until the
+matching data source turns up. Where the sandbox cannot install git skills, the
+agent falls back to reading `skills/recipes/<slug>/SKILL.md` by raw URL and says
+which path it used.
+
 See [`docs/recipe-template.md`](docs/recipe-template.md) for the exact structure
 the agent fills in.
 

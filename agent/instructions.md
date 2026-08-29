@@ -63,9 +63,13 @@ Accept the file. Ask what "clean" means for this dataset if not obvious
 (destination use: BI import? analysis? migration?). Write the file into your
 sandbox and fingerprint it: row count, column count, file hash.
 
-**Before profiling, check for a recipe.** If a cleaning recipe is available for
-this data source (a `recipe-<slug>` skill, or a recipe file you can read), compute
-the incoming file's schema signature and compare. On an exact match, announce it
+**Before profiling, check for a recipe.** Recipes reach you two ways: as an
+attached skill named `recipe-<slug>` (registered after a human merged it), or —
+when the sandbox cannot install git skills — as a file you fetch by raw URL from
+`skills/recipes/<slug>/SKILL.md` in the delivery repository. Try the attached
+skill first; fall back to the raw URL. Say in your summary which path you used.
+If a recipe is available, compute the incoming file's schema signature and
+compare. On an exact match, announce it
 ("Recipe `<name>` matches this file, learned <date> from run <id>"), apply its
 confirmed policies without re-asking, and run CLARIFY only for what the recipe
 does not cover. On a mismatch, or when no recipe exists, proceed exactly as a
@@ -134,10 +138,24 @@ export cleans itself and only genuinely new problems reach a human.
 Ask exactly one question: "Save what we decided as a recipe for future
 `<dataset-name>` exports?" If declined, stop. If accepted:
 
-1. **Compute the schema signature** of the source file in the sandbox: the
-   ordered column names and inferred dtypes, hashed (SHA-256 of the normalized
-   header plus dtype list). This is how a future run recognizes the same data
-   source even when the filename changes.
+1. **Compute the schema signature** of the source file in the sandbox. A
+   signature only works if two runs compute it identically, so the recipe must
+   be able to state exactly how it was derived. Use this definition and record
+   it in the recipe:
+
+   - For each column in file order, take the column name, strip leading and
+     trailing whitespace, lowercase it, and collapse internal whitespace runs to
+     a single space.
+   - Pair it with a **logical** dtype from this closed set, never the parser's
+     native name: `integer`, `decimal`, `date`, `boolean`, `string`. Anything
+     unrecognized is `string`.
+   - Join each pair as `name:dtype`, join the pairs with `\n` (newline, no
+     trailing newline), encode UTF-8, and take the SHA-256 of those bytes.
+
+   The closed dtype set is what keeps this stable: a column read as `int64` on
+   one run and `Int64` on another still hashes as `integer`. Record the full
+   column list beside the hash in the recipe, so a mismatch can be explained to
+   the user in terms of the column that changed rather than a bare hash.
 
 2. **Author the recipe** as a `SKILL.md` at
    `skills/recipes/<dataset-slug>/SKILL.md`, following `docs/recipe-template.md`.
@@ -174,6 +192,11 @@ Ask exactly one question: "Save what we decided as a recipe for future
    and which run's evidence it derives from. The human merge of this pull request
    **is** the learning gate: nothing becomes standing policy until a person
    merges it.
+
+   Write only provenance that exists when you write the file: the creating run
+   id, the date, the source hash, and the branch. Who merged it, and when, are
+   facts that do not exist yet — the recipe records the merge as pending, and
+   the merge itself is the record. Never invent a merge date or a reviewer.
 
 5. **On a later run**, apply the matching rules described before PROFILE. In the
    final change report, mark every recipe-applied step with its provenance line.

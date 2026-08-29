@@ -17,13 +17,17 @@ name: recipe-{dataset-slug}
 description: Standing cleaning policy for {dataset human name} exports
   (schema {short-signature}). Auto-applies confirmed fixes; pauses for
   anything outside this recipe. Learned {date} from run {run-id}, merged
-  via PR #{n}.
+  via branch cleanroom/recipe-{dataset-slug}.
 ---
 
 # Cleaning recipe: {dataset human name}
 
 ## 1. Recognition
-- Schema signature: {sha256-of-normalized-header+dtypes}
+- Schema signature: {sha256}
+- Derivation (must be reproducible): for each column in file order, trim and
+  lowercase the name and collapse internal whitespace; pair it with a logical
+  dtype from `integer | decimal | date | boolean | string`; join as `name:dtype`,
+  join pairs with a newline, encode UTF-8, SHA-256.
 - Columns ({count}): {ordered name:dtype list}
 - If the incoming file does NOT match this signature exactly: STOP. Do
   not apply this recipe. Report what changed and run a first-run CLARIFY
@@ -67,8 +71,12 @@ On any failure: STOP, report, do not deliver.
 
 ## 7. Provenance
 - Created: {date}, run {run-id}, source file SHA-256 {hash}.
-- Delivered as PR #{n}, reviewed by Qodo, merged by {user} on {date}.
+- Delivered on branch `cleanroom/recipe-{dataset-slug}`; review and merge pending.
 - Supersedes: {previous recipe version or "none"}.
+
+(Only facts that exist when the file is written belong here. Who merged the
+recipe and when are not knowable from inside the pull request that introduces
+it — the merge is its own record. Never write a merge date or reviewer name.)
 ```
 
 ## Rules the agent must not break when filling this in
@@ -77,11 +85,16 @@ On any failure: STOP, report, do not deliver.
    a clarification question about it or approved a plan step that encoded it.
    Anything the agent inferred but never asked belongs in §6 as an open
    question, never in §2 as a rule.
-2. **Numbers, not vibes.** Every threshold in §4 and §5 is a measured value
+2. **A signature must be reproducible.** The derivation above is part of the
+   recipe, and the logical dtype set is closed on purpose: a column read as
+   `int64` on one run and `Int64` on another must still hash the same. Record
+   the column list beside the hash so a mismatch is explained as "column X
+   changed", not as two unequal hashes.
+3. **Numbers, not vibes.** Every threshold in §4 and §5 is a measured value
    from the creating run's profile. "Roughly the usual row count" is not a
    threshold; `40 ± 20%` is.
-3. **A recipe licenses silence about the known, never about the new.** If the
+4. **A recipe licenses silence about the known, never about the new.** If the
    incoming file contains anything the recipe does not describe, the agent
    pauses and asks.
-4. **Provenance on every line.** A reader must be able to trace each rule to
+5. **Provenance on every line.** A reader must be able to trace each rule to
    the run and the human decision that produced it.

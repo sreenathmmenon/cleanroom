@@ -56,8 +56,20 @@ async function ask(q) {
   return a === "y" || a === "yes";
 }
 
+// A question in --auto mode is the recipe escalating: something outside its
+// policy needs a human. Answering it with a guess would defeat the rule this
+// replay exists to demonstrate, so unattended mode stops and reports instead.
+function haltOnEscalation(q) {
+  console.log(`\n\x1b[1;35m❓ ESCALATION — a human decision is required:\x1b[0m\n${q}`);
+  console.log(
+    "\nUnattended mode stops here by design: a recipe licenses silence about the\n" +
+      "known, never about the new. Re-run without --auto to answer it.",
+  );
+  process.exit(2);
+}
+
 async function answer(q) {
-  if (AUTO) return "Use your best judgement and state the assumption in the change report.";
+  if (AUTO) haltOnEscalation(q);
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const a = await rl.question(`\x1b[1;35m${q}\x1b[0m\n> `);
   rl.close();
@@ -90,9 +102,13 @@ const describeCall = (evs, ref) => {
   };
 };
 
-async function runTurn(sid, input, label) {
+async function runTurn(sid, input, label, prevTurnId) {
   say(`\n━▓ ${label}`);
-  const { data: turn } = await api(`/api/v1/sessions/${sid}/turns`, { input, stream: false });
+  // A resume must chain to the turn that raised the pause, or the runtime
+  // cannot match the submitted item to the call awaiting it.
+  const body = { input, stream: false };
+  if (prevTurnId) body.previous_turn_id = prevTurnId;
+  const { data: turn } = await api(`/api/v1/sessions/${sid}/turns`, body);
 
   for (;;) {
     await sleep(1000);
@@ -117,6 +133,7 @@ async function runTurn(sid, input, label) {
         sid,
         [{ type: "user.tool_response", thread_id: pending.thread_id, tool_call_id: ref.id, content: text }],
         `answer: ${String(args.question ?? name).slice(0, 50)}`,
+        turn.id,
       );
     }
 
@@ -129,6 +146,7 @@ async function runTurn(sid, input, label) {
       sid,
       [{ type: "user.tool_approval", thread_id: pending.thread_id, tool_call_id: ref.id, approval: { status: "allow" } }],
       `gate: ${String(name).slice(0, 40)}`,
+      turn.id,
     );
   }
 }
@@ -154,4 +172,8 @@ unchanged: measured findings, a labelled plan, my approval before anything
 destructive, and verification before you claim success.`;
 
 const { status } = await runTurn(session.id, [{ type: "user.message", content: request }], "RECIPE MATCH → PROFILE → PLAN");
+if (status !== "done") {
+  console.error(`\nReplay ended in state "${status}".`);
+  process.exit(1);
+}
 say(`\nReplay finished (${status}).`);

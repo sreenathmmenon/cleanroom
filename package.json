@@ -9,7 +9,8 @@
     "seed": "node scripts/seed-agent.mjs",
     "setup:all": "npm run configure && npm run seed",
     "demo": "node scripts/demo.mjs",
-    "demo:recipe": "node scripts/demo-recipe.mjs"
+    "demo:recipe": "node scripts/demo-recipe.mjs",
+    "recipe:register": "node scripts/register-recipe.mjs"
   },
   "engines": {
     "node": ">=22"
