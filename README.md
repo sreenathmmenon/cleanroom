@@ -103,8 +103,8 @@ Every PR in this repo is reviewed by [Qodo](https://www.qodo.ai) before merge;
 direct pushes to `main` carry no feature work.
 
 - **PR #1 — initial scaffold** (agent manifest, skill, samples, scripts, docs):
-  link — to be filled on merge. Summary of Qodo findings and our responses will
-  be added here as reviews land.
+  [#1](https://github.com/sreenathmmenon/cleanroom/pull/1). Summary of Qodo
+  findings and our responses will be added here as reviews land.
 
 ## Status & roadmap
 
