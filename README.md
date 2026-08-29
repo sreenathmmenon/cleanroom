@@ -12,8 +12,8 @@ approval before anything destructive**. Out comes a clean file and a change
 report that accounts for every row.
 
 ```
-messy.csv ──▶ PROFILE ──▶ CLARIFY ──▶ PLAN ──▶ 🛑 APPROVAL GATE ──▶ APPLY ──▶ VERIFY ──▶ cleaned.csv + change_report.md
-                (sandbox)  (ask-user)  (previews)   (human decides)    (sandbox)  (assertions)      (download)
+messy.csv ──▶ PROFILE ──▶ CLARIFY ──▶ PLAN ──▶ 🛑 APPROVAL GATE ──▶ APPLY ──▶ VERIFY ──▶ DELIVER ──▶ DISTILL
+                (sandbox)  (ask-user)  (previews)   (human decides)    (sandbox)  (assertions)  (gated PR)  (recipe PR)
 ```
 
 Built for [The Agent Harness Hackathon](https://www.wemakedevs.org/hackathons/trueforge)
@@ -78,6 +78,62 @@ Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and att
 `data/samples/sales_export_messy.csv` — a realistic 42-row export planted with
 exact duplicates from a double import, a near-duplicate, three date formats,
 currency strings, region variants, nulls, a negative quantity, and wrong totals.
+
+## Recipes — the agent learns the clean
+
+The first run costs you five questions. The second should cost none.
+
+After a delivery verifies green, Cleanroom asks one question: save what we
+decided as a recipe for this data source? On yes, it computes a **schema
+signature** (SHA-256 of the ordered column names and dtypes), writes the
+confirmed policies as a skill at `skills/recipes/<slug>/SKILL.md`, and opens a
+second pull request containing only that file.
+
+**The human merge is the learning gate.** The agent cannot promote its own
+policy — a person reviews what it claims to have learned, Qodo reviews it too,
+and only a merge makes it standing behavior. Its memory is a pull request.
+
+A recipe records only what a human actually confirmed, each line carrying its
+provenance ("confirmed by user on run `<id>`, `<date>`"). Anything the agent
+inferred but never asked about is filed as an open question, not a rule. Every
+threshold is a measured number from the creating run, not a vibe.
+
+On a later export, a matching signature means the confirmed fixes apply without
+re-asking. But a recipe is a licence to stop asking about the **known**, never
+about the **new**. The run stops and asks when:
+
+- the schema signature does not match (a column added, removed, renamed, retyped);
+- a category appears that is not in the canon map;
+- the row count, null rate, or a step's blast radius falls outside recorded bounds;
+- any verification assertion fails;
+- the file contains anything the recipe is silent on.
+
+`data/samples/sales_export_messy_week2.csv` is the second act: same schema,
+issues the recipe already covers — and one region value, `southwest`, that it
+has never seen. Zero questions for the known, one pause for the new.
+
+The same rules hold unattended. A scheduled run applies the recipe and stops on
+any escalation; it never guesses because nobody is watching.
+
+### Putting a merged recipe to work
+
+Merging the recipe PR is the human decision; registering it is the mechanical
+step after:
+
+```bash
+npm run recipe:register -- sales-export   # register the merged recipe as a skill
+npm run seed                              # attach it to the agent
+```
+
+`seed` attaches every registered `recipe-*` skill, so the next run can match one.
+Skills load progressively — TrueForge shows the agent only each skill's name and
+description until one is relevant, so a shelf of recipes costs nothing until the
+matching data source turns up. Where the sandbox cannot install git skills, the
+agent falls back to reading `skills/recipes/<slug>/SKILL.md` by raw URL and says
+which path it used.
+
+See [`docs/recipe-template.md`](docs/recipe-template.md) for the exact structure
+the agent fills in.
 
 ## Sample dataset
 
