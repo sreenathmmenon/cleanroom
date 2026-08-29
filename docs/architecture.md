@@ -10,8 +10,9 @@ flowchart LR
     AQ -- "answers" --> TF
     TF -- "fix plan (labeled destructive)" --> U
     U -- "approve / edit / reject" --> TF
-    TF -- "write cleaned + report" --> FS["filesystem MCP<br/>(@write requires approval)"]
-    FS -- "gated write" --> OUT["exports/"]
+    TF -- "write cleaned + report" --> FS["GitHub MCP<br/>(@write requires approval)"]
+    FS -- "gated writes" --> OUT["branch + PR<br/>exports/&lt;id&gt;/"]
+    OUT -- "human reviews & merges" --> U
     TF -- "download offer" --> U
 ```
 
@@ -23,14 +24,15 @@ flowchart LR
 | System prompt | `agent/instructions.md` | The 8-phase workflow: INTAKE → PROFILE → CLARIFY → PLAN → GATE → APPLY → VERIFY → DELIVER |
 | Skill | `skills/data-cleaning/SKILL.md` | Git-backed methodology: profiling checklist, fix catalog, pandas patterns, verification suite, change-report format |
 | Sandbox | TrueForge → Daytona | Isolated execution; `file_downloads` enabled for artifact retrieval |
-| Filesystem MCP | TrueForge Connectors | Read inputs; **writes/deletes require human approval** (the formal gate) |
+| GitHub MCP | TrueForge Connectors | Delivery: branch, commit, and open a PR — **every write requires human approval** (the formal gate) |
 | Sample corpus | `data/samples/` | Deterministic messy datasets for demos and judge reproducibility |
 
 ## Safety invariants
 
 1. Original file never written — only the sandbox copy is mutated.
 2. Destructive fixes and exports are gated twice: plan approval (chat) and MCP
-   write approval (harness checkpoint).
+   write approval (harness checkpoint). Delivery adds a third human step — the
+   pull request must be reviewed and merged by a person.
 3. Success is claimed only after the verification suite passes; failures halt
    and report.
 4. The change report must reconcile every row: in = out + dropped (reasoned).
