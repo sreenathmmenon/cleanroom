@@ -74,6 +74,13 @@ npm run setup:all           # configures providers + skill, then seeds the agent
 #   pull-request delivery step is unavailable.
 ```
 
+For the branded embed instead of the stock chat UI:
+
+```bash
+npm --prefix ui ci && npm --prefix ui run build
+node scripts/serve-ui.mjs   # http://127.0.0.1:4174, /api proxied to TrueForge
+```
+
 Open the TrueForge chat UI → Agents Library → **Cleanroom** → Try, and attach
 `data/samples/sales_export_messy.csv` — a realistic 42-row export planted with
 exact duplicates from a double import, a near-duplicate, three date formats,
@@ -274,11 +281,13 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - [x] Approval-gated delivery as a pull request ([PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — opened by the agent)
 - [x] Scripted replay for judges (`npm run demo`)
 - [x] Dynamic subagent delegation for category analysis ([transcript](docs/evidence/subagent-run.md))
-- [x] Recipes: the agent distills a run into a policy and delivers it as a PR;
-      [run 2 asks one question instead of five](docs/evidence/run2-recipe.md), and
-      refuses the recipe outright when the schema changes
+- [x] Recipes: the agent distills a run into a policy and delivers it as a PR
+      ([DISTILL, matching, and the recipe template](docs/recipe-template.md));
+      the run-2 and schema-refusal transcripts land with #14
 - [x] [10,000-row scale run](docs/evidence/scale-run.md) scored against a ground-truth manifest
-- [x] Branded UI embed served same-origin (`node scripts/serve-ui.mjs`)
+- [x] Branded UI embed served same-origin — build it first, then serve:
+      `npm --prefix ui ci && npm --prefix ui run build && node scripts/serve-ui.mjs`
+      (see `ui/README.md`, including what does not yet work)
 - [ ] Diff previews as custom components in the UI
 - [ ] Second dataset persona (inventory export)
 - [ ] Standing schedules, once the TrueForge build serves `/api/v1/schedules`
