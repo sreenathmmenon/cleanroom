@@ -50,7 +50,7 @@ difference, and every capability below is load-bearing:
 | Human checkpoints | GitHub MCP `@write`/`@destructive` tools require approval — every commit and the PR itself pass through the gate |
 | `ask_user_questions` | One structured round of clarification instead of silent guesses |
 | Generative UI | Findings tables and before/after previews render rich, not as markdown soup |
-| Dynamic subagents | Enabled on the agent; category canonicalization is the delegation target (evidence run in progress) |
+| Dynamic subagents | Category canonicalization is delegated to a focused subagent via `create_sub_agent`; the root agent receives the map, the counts, and any ambiguity flagged — not the analysis — [captured run](docs/evidence/subagent-run.md) |
 | Skills (git-backed) | The `data-cleaning` methodology lives in `skills/data-cleaning/SKILL.md` in this repo — versioned, reviewable, reusable |
 | Persistent sessions | A dataset's cleaning history survives across turns — refine instead of restart |
 | Context management | Large profiling outputs offload to the sandbox instead of flooding context |
@@ -125,7 +125,7 @@ now the demo's signature behavior.
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
 | Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
-| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, persistent sessions (a run spans many turns; reconnect resumes the stream), generative UI tables |
+| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, generative UI tables |
 | Use of Qodo | Table above; every merged PR carries its review thread |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 | Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
