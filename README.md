@@ -249,6 +249,36 @@ corrected to match.
 Full transcript, scoring table, and the ten-part clarification:
 [`docs/evidence/real-world-run.md`](docs/evidence/real-world-run.md).
 
+### And on real money?
+
+311 data has no money in it, and the sales corpus's arithmetic defects were
+planted by the same person who wrote the arithmetic checks. So the agent was also
+pointed at 6,000 rows of
+[NYC Citywide Payroll Data](https://data.cityofnewyork.us/City-Government/Citywide-Payroll-Data-Fiscal-Year-/k397-673e)
+(CC0) — 70 agencies, 12 fiscal years, real salaries — with no description of its
+defects.
+
+**Eighteen of eighteen checks exact** (`npm run score:payroll`), including 1,068
+rows paid overtime for zero overtime hours, 223 rows carrying negative pay or
+hours, and six findings the reference script never thought to measure.
+
+But the result that matters is what it **refused** to do. On the sales corpus a
+stored `total` must equal `qty × unit_price`, so a mismatch is an error and the
+agent recomputes it. Here, 762 per-hour rows have `regular_gross_paid ≠
+base_salary × regular_hours` — and it declined to touch them:
+
+> often includes poll workers with a placeholder `$1` rate and zero hours;
+> **recomputation would corrupt pay** […] there is no stored total column against
+> which to assert equality
+
+`base_salary` is a *rate*, not an expected total; gross pay legitimately reflects
+partial periods and mid-year changes. All five of its clarifying questions
+recommended **preserve and flag**, and the option a naive cleaner would pick by
+default — overwrite the 762 mismatches — was offered and not recommended.
+
+Scoring table, the five questions, and every message and tool call from the run:
+[`docs/evidence/real-payroll-run.md`](docs/evidence/real-payroll-run.md).
+
 ## Sample dataset
 
 `data/samples/sales_export_messy.csv` is the demo corpus: deterministic,
@@ -292,6 +322,7 @@ now the demo's signature behavior.
 
 | Criterion | Evidence |
 |---|---|
+| **It knows when *not* to act** | On [6,000 rows of real payroll](docs/evidence/real-payroll-run.md) — 18/18 checks exact — it **refused to recompute 762 pay mismatches**, the same defect shape it fixes on the sales corpus, because `base_salary` is a rate rather than an expected total and no stored total exists to reconcile against. All five of its questions recommended preserve-and-flag |
 | Works on unfamiliar real data | [5,000 rows of NYC 311](docs/evidence/real-world-run.md), nothing planted: 8/8 checks exact, and it corrected the verification script three times |
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
 | Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
@@ -310,9 +341,10 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - **CSV only.** Excel is the obvious next wedge — the profiling and fix catalog
   are format-agnostic; only the reader changes. CSV first is a deliberate scope
   choice, not an accident.
-- **Real-world coverage is one dataset deep.** The [NYC 311 run](docs/evidence/real-world-run.md)
-  shows the agent handling 44 columns of data nobody prepared for it, but one
-  real corpus is a demonstration, not a guarantee across domains.
+- **Real-world coverage is two datasets deep.** The [NYC 311 run](docs/evidence/real-world-run.md)
+  and the [payroll run](docs/evidence/real-payroll-run.md) show the agent handling
+  real municipal and financial data nobody prepared for it, but two corpora are a
+  demonstration, not a guarantee across domains.
 - **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
   same findings appear on every run and a judge can verify each number by hand.
   A [10,000-row run](docs/evidence/scale-run.md) is published alongside it,
