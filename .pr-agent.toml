@@ -1,0 +1,33 @@
+# Qodo Merge (PR-Agent) review standards for this repo.
+# Tuned for a hackathon submission where review cycles are scarce and the PR
+# trail is itself a judged artifact (code-quality track).
+
+[pr_reviewer]
+# Focused, high-signal reviews: cap suggestions so findings stay actionable.
+num_code_suggestions = 5
+require_score_review = true
+require_tests_review = true
+require_security_review = true
+require_focused_review = true
+extra_instructions = """\
+Project context: Cleanroom is an approval-gated data-repair agent on TrueForge
+(hackathon submission). Review with these priorities, in order:
+
+1. SECRET HYGIENE (blocker): any credential, token, API key, or personal data
+   reaching code, config, logs, docs, or commit-adjacent files. Keys belong in
+   .env (gitignored) or the TrueForge settings store only.
+2. API CORRECTNESS: scripts must match TrueForge's live API — response bodies
+   are wrapped as {"data": ...}; catalog presets are keyed by "type"; agent
+   specs validate referenced skills/MCP servers eagerly.
+3. DETERMINISM: the demo corpus (data/samples/) and all scripts must behave
+   identically on re-run; flag anything that introduces run-to-run variance.
+4. JUDGE RUNNABILITY: setup/seed/demo paths must work from a clean clone with
+   only .env filled in; flag assumptions about local state.
+
+De-prioritize: stylistic preferences, exhaustive test-coverage mandates beyond
+the existing verification scripts, and dependency-version bumps.
+"""
+
+[pr_description]
+publish_labels = true
+extra_instructions = "State which capability the PR advances: approval gate, sandbox execution, skills, UI, docs, or tooling."
