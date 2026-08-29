@@ -46,9 +46,10 @@ const server = createServer((req, res) => {
       { ...upstream, path: req.url, method: req.method, headers: { ...req.headers, host: TARGET.host } },
       (up) => {
         res.writeHead(up.statusCode, up.headers);
-        // A mid-stream upstream failure must not take the server down: headers
-        // are already sent, so the only honest move is to end the response.
-        up.on("error", () => res.destroy());
+        // A mid-stream upstream failure must not take the server down. Headers
+        // are already sent, so destroying the socket is the honest signal: the
+        // client sees a transport error rather than a truncated 200.
+        up.on("error", (err) => res.destroy(err));
         up.pipe(res); // streams SSE too
       },
     );
@@ -69,10 +70,16 @@ const server = createServer((req, res) => {
     return;
   }
   const stream = createReadStream(file);
-  // The file can vanish or become unreadable between the check and the open;
-  // report that as HTTP rather than an unhandled stream error.
+  // The file can vanish or become unreadable between the check and the open.
+  // Before headers, that is a clean 500. After headers the status is already
+  // 200, so ending the response would hand the browser a truncated asset as a
+  // success; destroy the socket instead, which surfaces as a transport error.
   stream.on("error", (err) => {
-    if (!res.headersSent) res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+    if (res.headersSent) {
+      res.destroy(err);
+      return;
+    }
+    res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
     res.end(`Cannot read ${file}: ${err.code}`);
   });
   stream.once("open", () => {
