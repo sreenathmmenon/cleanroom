@@ -215,6 +215,40 @@ conversation. Full numbers and transcript in
 ```bash
 python3 scripts/make_large_corpus.py   # regenerates the identical corpus + manifest
 ```
+## Does it work on data nobody prepared for it?
+
+The corpora above share a weakness worth naming: they were built here, so a
+profiling run against them measures the agent against its author's imagination.
+
+So it was pointed at 5,000 rows of
+[NYC 311 Service Requests](https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9)
+(CC0, public domain) — 44 columns of real municipal data — and told nothing about
+what was wrong with it.
+
+**Eight of eight independently measured checks, exact**, with no false positives
+— reproducible with `npm run score:real-world`, which recomputes every reference
+value from the corpus and exits non-zero on any mismatch.
+Including the finding no synthetic corpus here models: **32 tickets closed
+*before* they were created.**
+
+Then it did the harder thing. Every one of those inversions is between 1 and 29
+seconds, so the agent diagnosed them as **source precision artifacts and
+recommended preserving them** — not repairing them. It read 1,203
+resolution-update inversions the same way, from midnight-valued samples:
+date-only granularity rather than corruption. Repairing real data means knowing which anomalies are errors and
+which are how the source records the world.
+
+And three of its numbers **corrected the verification script**. My reference
+counted empty cells, so it scored `park_facility_name` as fully populated; the
+agent saw that it is the literal string `Unspecified` in 4,997 rows and `N/A` in
+3 — 100% missing, 0% empty. It was right about `police_precinct` (4,913
+convertible labels, not 5,000 populated) and `location_type` (41 true case
+variants, not 3,505 non-uppercase values) too. The reference in this repo was
+corrected to match.
+
+Full transcript, scoring table, and the ten-part clarification:
+[`docs/evidence/real-world-run.md`](docs/evidence/real-world-run.md).
+
 ## Sample dataset
 
 `data/samples/sales_export_messy.csv` is the demo corpus: deterministic,
@@ -258,6 +292,7 @@ now the demo's signature behavior.
 
 | Criterion | Evidence |
 |---|---|
+| Works on unfamiliar real data | [5,000 rows of NYC 311](docs/evidence/real-world-run.md), nothing planted: 8/8 checks exact, and it corrected the verification script three times |
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
 | Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
 | Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
@@ -275,6 +310,9 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - **CSV only.** Excel is the obvious next wedge — the profiling and fix catalog
   are format-agnostic; only the reader changes. CSV first is a deliberate scope
   choice, not an accident.
+- **Real-world coverage is one dataset deep.** The [NYC 311 run](docs/evidence/real-world-run.md)
+  shows the agent handling 44 columns of data nobody prepared for it, but one
+  real corpus is a demonstration, not a guarantee across domains.
 - **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
   same findings appear on every run and a judge can verify each number by hand.
   A [10,000-row run](docs/evidence/scale-run.md) is published alongside it,
