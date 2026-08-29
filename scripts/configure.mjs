@@ -116,10 +116,6 @@ if (env.SKILL_REF) {
   else console.log(`Skill "data-cleaning" registered from repo @ ${env.SKILL_REF}.`);
 }
 
-if (errors.length) {
-  console.error(`\n${errors.length} step(s) failed — fix the issues above and re-run.`);
-  process.exit(1);
-}
 // 4. GitHub MCP server (delivery gate): classic PAT with repo scope.
 if (env.GITHUB_TOKEN) {
   const manifest = {
@@ -139,4 +135,8 @@ if (env.GITHUB_TOKEN) {
   console.log("GITHUB_TOKEN not set — skipping GitHub MCP (delivery gate unavailable).");
 }
 
+if (errors.length) {
+  console.error(`\n${errors.length} step(s) failed — fix the issues above and re-run.`);
+  process.exit(1);
+}
 console.log("\nNext: npm run seed   # then open the chat UI and try Cleanroom");

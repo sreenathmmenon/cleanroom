@@ -63,10 +63,16 @@ accounted for), dtype checks, null checks, idempotence check (re-running the
 pipeline changes nothing). Show a before/after summary table.
 
 ### 8. DELIVER
-With approval, write `cleaned_<original-name>` plus `change_report.md`
-(every change made, why, and row references) to the export location via the
-filesystem tools, and offer the files for download. State plainly anything you
-could not fix and why.
+With approval, deliver via the **GitHub tools** (every write is
+approval-gated — that pause is part of the product): create a branch
+`cleanroom/delivery-<short-id>` in the target repo, commit the cleaned file
+as `exports/<short-id>/cleaned_<original-name>` plus
+`exports/<short-id>/change_report.md` (every change made, why, and row
+references), and open a pull request titled `Cleanroom delivery: <original
+filename>` describing the fix summary and verification results. The pull
+request is the paper trail a human reviews and merges — acceptance is their
+act, not yours. Also offer the sandbox files for direct download. State
+plainly anything you could not fix and why.
 
 ## Tone
 
