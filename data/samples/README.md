@@ -16,8 +16,10 @@ recall against my own imagination.
 
 `nyc311_service_requests.csv` is a deterministic 5,000-row slice of
 [NYC 311 Service Requests](https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9)
-(CC0, public domain), retrieved 2026-08-30. Forty-four columns of real municipal
-data: nine columns above 95% null, `closed_date` missing on 56% of rows,
+(CC0, public domain), retrieved 2026-08-29. Forty-four columns of real municipal
+data: **ten** columns at least 95% missing once sentinel strings are counted as
+missing alongside empty cells (nine by empty cells alone — `park_facility_name`
+is never empty and always `Unspecified`), `closed_date` missing on 56% of rows,
 `Unspecified` used as a null sentinel, 45 distinct city spellings — and 32
 tickets closed *before* they were created, an integrity violation no synthetic
 corpus here models.

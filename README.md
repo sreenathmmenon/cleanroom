@@ -225,15 +225,17 @@ So it was pointed at 5,000 rows of
 (CC0, public domain) — 44 columns of real municipal data — and told nothing about
 what was wrong with it.
 
-**Eight of eight independently measured checks, exact**, with no false positives.
+**Eight of eight independently measured checks, exact**, with no false positives
+— reproducible with `npm run score:real-world`, which recomputes every reference
+value from the corpus and exits non-zero on any mismatch.
 Including the finding no synthetic corpus here models: **32 tickets closed
 *before* they were created.**
 
 Then it did the harder thing. Every one of those inversions is between 1 and 29
 seconds, so the agent diagnosed them as **source precision artifacts and
-recommended preserving them** — not repairing them. Same for 1,203
-resolution-update inversions, all at midnight: date-only granularity, not
-corruption. Repairing real data means knowing which anomalies are errors and
+recommended preserving them** — not repairing them. It read 1,203
+resolution-update inversions the same way, from midnight-valued samples:
+date-only granularity rather than corruption. Repairing real data means knowing which anomalies are errors and
 which are how the source records the world.
 
 And three of its numbers **corrected the verification script**. My reference

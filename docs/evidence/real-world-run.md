@@ -4,7 +4,7 @@ Every other corpus in this repo was built here, which means a profiling run
 against them measures the agent against the author's imagination. This one was
 not: it is a slice of
 [NYC 311 Service Requests](https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9)
-(CC0), 44 columns of real municipal data, and the agent was told nothing about
+(CC0, retrieved 2026-08-29), 44 columns of real municipal data, and the agent was told nothing about
 what was wrong with it.
 
 - Corpus: `data/samples/nyc311_service_requests.csv` — 5,000 rows × 44 columns
@@ -29,7 +29,18 @@ scores the agent against reality.
 | `location_type` case-variant rows | 41 | 41 | exact |
 | Columns ≥95% missing | 10 | 10 | exact |
 
-**Eight of eight, exact.** No false positives: the agent reported 0 unparseable
+**Eight of eight, exact** — and reproducible:
+
+```bash
+npm run score:real-world
+```
+
+`scripts/score-real-world-run.mjs` recomputes every reference value from the
+corpus and compares it with the figure the agent reported (transcribed into the
+script from this transcript), exiting non-zero on any mismatch. It reports 9 of 9
+including the shape check.
+
+No false positives: the agent reported 0 unparseable
 dates across 10,569 populated date values, 0 future incident timestamps, and
 confirmed all 4,918 WKT locations parse and agree with their latitude/longitude.
 
@@ -54,18 +65,23 @@ non-uppercase value. Only one of them is a genuine case variant:
 other 3,464 are values with no uppercase twin — not canonicalization candidates
 at all. The agent counted rows that would actually change.
 
-The reference in this repo has been corrected to match. An agent that finds a
-defect the verification script missed is the point of running it on data nobody
-prepared.
+The reference in this repo has been corrected to match, and
+`scripts/score-real-world-run.mjs` encodes the corrected definitions — sentinel
+strings count as missing, precinct labels must be numeric to be convertible, and
+only values with an uppercase twin are canonicalization candidates. An agent that
+finds a defect the verification script missed is the point of running it on data
+nobody prepared.
 
 ## The judgment call it did not get wrong
 
 Thirty-two tickets are closed before they were created. A naive repair swaps or
 nulls them. The agent measured the *distribution* first — every inversion is
 between 1 and 29 seconds — and concluded they are source precision artifacts,
-recommending they be **preserved**, not repaired. Likewise the 1,203
-resolution-update inversions, whose timestamps are all midnight: date-only
-granularity, not corruption.
+recommending they be **preserved**, not repaired. It made a similar call on the 1,203
+resolution-update inversions, whose sampled timestamps are midnight — the agent
+read that as date-only granularity rather than corruption. (The transcript
+supports the diagnosis from samples, not from an exhaustive check of all 1,203;
+stated here as the agent stated it.)
 
 It made the same call on the 145 near-duplicate operational signatures: unique
 keys are genuinely unique, so it proposed keeping all of them and flagging
@@ -230,10 +246,10 @@ Geospatial integrity is otherwise strong: all 4,918 populated WKT locations pars
 Detailed reports:
 
 ```sandbox_artifacts
-[Full profiler output](/Users/sreenath/Library/Application Support/trueforge/sandboxes/01m17wzvbea3gr96bmqgagpj97/01m17x014q1xzj830b2beybnkg/work/nyc311_profile/profile_full.txt)
-[Sorted findings table](/Users/sreenath/Library/Application Support/trueforge/sandboxes/01m17wzvbea3gr96bmqgagpj97/01m17x014q1xzj830b2beybnkg/work/nyc311_profile/findings.csv)
-[Decision evidence and previews](/Users/sreenath/Library/Application Support/trueforge/sandboxes/01m17wzvbea3gr96bmqgagpj97/01m17x014q1xzj830b2beybnkg/work/nyc311_profile/decision_evidence.md)
-[Row-level evidence indices](/Users/sreenath/Library/Application Support/trueforge/sandboxes/01m17wzvbea3gr96bmqgagpj97/01m17x014q1xzj830b2beybnkg/work/nyc311_profile/row_evidence.json)
+[Full profiler output](<sandbox>/profile_full.txt)
+[Sorted findings table](<sandbox>/findings.csv)
+[Decision evidence and previews](<sandbox>/decision_evidence.md)
+[Row-level evidence indices](<sandbox>/row_evidence.json)
 ```
 
 I need one consolidated policy decision before I can produce the exact fix plan and approval gate.
