@@ -34,6 +34,23 @@ const spec = JSON.parse(readFileSync(join(root, "agent", "cleanroom.agent.json")
 spec.manifest.instructions = readFileSync(join(root, "agent", "instructions.md"), "utf8");
 if (model) spec.manifest.model = { name: model };
 
+// Tolerate unconfigured connectors so a clean clone seeds successfully:
+// drop manifest references the server doesn't know (e.g. no GITHUB_TOKEN —
+// the delivery gate attaches once `npm run configure` registers it).
+const connectors = await api("/api/v1/mcp-servers").catch(() => null);
+if (connectors && connectors.ok) {
+  const names = new Set(((await connectors.json()).data ?? []).map((m) => m.name));
+  const wanted = spec.manifest.mcp_servers ?? [];
+  const missing = wanted.filter((m) => !names.has(m.name));
+  if (missing.length) {
+    console.warn(
+      `Warning: dropping unconfigured MCP server(s) from the agent: ${missing.map((m) => m.name).join(", ")}.` +
+        ` Run \`npm run configure\` (needs GITHUB_TOKEN) to enable the delivery gate.`,
+    );
+    spec.manifest.mcp_servers = wanted.filter((m) => names.has(m.name));
+  }
+}
+
 const api = (path, init) =>
   fetch(`${base}${path}`, {
     ...init,
