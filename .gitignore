@@ -1,0 +1,24 @@
+# environment / secrets
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+dist/
+*.log
+
+# trueforge local state
+.trueforge/
+
+# working data (uploads, outputs) — samples are committed intentionally
+data/uploads/
+data/out/
+exports/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
