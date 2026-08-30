@@ -1,0 +1,12 @@
+node_modules
+ui/node_modules
+ui/dist
+.git
+.env
+.env.*
+!.env.example
+PROJECT
+PROJECT.md
+AGENTS.md
+*.log
+.DS_Store
