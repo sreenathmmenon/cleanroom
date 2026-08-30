@@ -19,6 +19,45 @@ messy.csv ──▶ PROFILE ──▶ CLARIFY ──▶ PLAN ──▶ 🛑 APPR
 Built for [The Agent Harness Hackathon](https://www.wemakedevs.org/hackathons/trueforge)
 (WeMakeDevs × TrueFoundry, Aug 24–30, 2026).
 
+---
+
+### The 30-second version
+
+It was pointed at two real public datasets it had never seen, with no description
+of their defects — and scored against references measured by a separate script.
+
+| | |
+|---|---|
+| [**NYC 311**](docs/evidence/real-world-run.md) — 5,000 rows × 44 columns | **9/9 checks exact.** Found 32 tickets closed *before* they were created, and **corrected the verification script three times** |
+| [**NYC payroll**](docs/evidence/real-payroll-run.md) — 6,000 rows, real salaries | **18/18 checks exact.** Found 1,068 rows paid overtime for zero overtime hours |
+
+Then it did the thing that matters. On its demo corpus, a stored `total` must
+equal `qty × unit_price`, so a mismatch is an error and it recomputes. Real
+payroll contains 762 rows with the **identical defect shape** —
+`regular_gross_paid ≠ base_salary × regular_hours`. It refused:
+
+> often includes poll workers with a placeholder `$1` rate and zero hours;
+> **recomputation would corrupt pay** […] there is no stored total column against
+> which to assert equality
+
+`base_salary` is a *rate*, not an expected total. An agent that "reconciles" that
+column silently rewrites thousands of people's pay. All five of its questions
+recommended **preserve and flag**; the destructive option a naive cleaner picks by
+default was offered and not recommended.
+
+**Every number above is re-checkable from a cold clone:**
+
+```bash
+npm run score:real-world   # 9/9 agent comparisons, 9/9 reference cross-checks
+npm run score:payroll      # 18/18 agent comparisons, 11/11 reference cross-checks
+npm run check:recipe-guard # the signature gate that makes a recipe refuse
+```
+
+Each binds to the corpus SHA-256 and exits non-zero if anything drifts — so they
+prove *these* numbers describe *this* data, not merely that some file matched.
+
+---
+
 ## Why this exists
 
 Every team has a CSV export that three different people have hand-edited and
