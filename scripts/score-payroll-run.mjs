@@ -48,6 +48,10 @@ const AGENT = {
   rows_with_any_negative: 223,
   repeated_employee_year_rows: 228,
   repeated_employee_year_groups: 112,
+  // The headline refusal: per-hour rows where gross pay does not equal
+  // base_salary x regular_hours. The agent declined to "fix" these.
+  per_hour_gross_mismatch: 762,
+  per_hour_rows_assessable: 864,
 };
 
 function parseCsv(text) {
@@ -184,6 +188,21 @@ const REFERENCE = {
   rows_with_any_negative: data.filter((r) => NEG_FIELDS.some((f) => (num(r, f) ?? 0) < 0)).length,
   repeated_employee_year_rows: repeated.reduce((s, n) => s + n, 0),
   repeated_employee_year_groups: repeated.length,
+  ...(() => {
+    // Per-hour rows with all three fields present are the assessable set; a
+    // mismatch beyond a dollar is what the agent refused to recompute.
+    const perHour = data.filter(
+      (r) =>
+        col(r, "pay_basis").trim() === "per Hour" &&
+        num(r, "base_salary") !== null &&
+        num(r, "regular_hours") !== null &&
+        num(r, "regular_gross_paid") !== null,
+    );
+    const mismatch = perHour.filter(
+      (r) => Math.abs(num(r, "regular_gross_paid") - num(r, "base_salary") * num(r, "regular_hours")) > 1,
+    );
+    return { per_hour_gross_mismatch: mismatch.length, per_hour_rows_assessable: perHour.length };
+  })(),
 };
 
 // Cross-check the reference JSON. Same-named keys compare directly; values it
