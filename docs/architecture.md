@@ -25,7 +25,7 @@ flowchart LR
 | Skill | `skills/data-cleaning/SKILL.md` | Git-backed methodology: profiling checklist, fix catalog, pandas patterns, verification suite, change-report format |
 | Sandbox | TrueForge → Daytona | Isolated execution; `file_downloads` enabled for artifact retrieval |
 | GitHub MCP | TrueForge Connectors | Delivery: branch, commit, and open a PR — **every write requires human approval** (the formal gate) |
-| Sample corpus | `data/samples/` | Deterministic messy datasets for demos and judge reproducibility — `sales_export_messy.csv` (first run) and `sales_export_messy_week2.csv` (second run, same schema, one unseen category) |
+| Sample corpus | `data/samples/` | Deterministic messy datasets so a demo reproduces exactly — `sales_export_messy.csv` (first run) and `sales_export_messy_week2.csv` (second run, same schema, one unseen category) |
 | Recipes | `skills/recipes/<slug>/SKILL.md` | Standing cleaning policy per data source, authored by the agent at DISTILL and delivered as a pull request — merging it is what makes it policy |
 
 ## Safety invariants
