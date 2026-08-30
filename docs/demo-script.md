@@ -32,7 +32,7 @@ learned became policy until a human merged it.
 
 ## Shot checklist
 
-- [ ] Terminal: `./scripts/setup.sh` + `npm run seed` visible for 3s (judges see it's reproducible)
+- [ ] Terminal: `./scripts/setup.sh` + `npm run seed` visible for 3s (shows it's reproducible)
 - [ ] Sandbox execution visible (not summarized) — the "real work" proof
 - [ ] Approval dialog zoomed — the money shot; no cut during the pause
 - [ ] Before/after diff readable at 1080p
