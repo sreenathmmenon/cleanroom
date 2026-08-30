@@ -31,6 +31,15 @@ for i in $(seq 1 60); do
   sleep 1
 done
 
+# Exhausting the loop without a healthy probe means the platform's health check
+# will fail too. Exit rather than proceeding to configure a server that is not
+# serving, so the failure is reported instead of hanging.
+if ! node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then
+  echo "TrueForge did not become healthy within 60s" >&2
+  kill -TERM "$SERVER_PID" 2>/dev/null
+  exit 1
+fi
+
 export TRUEFORGE_URL="http://127.0.0.1:${PORT}"
 
 # Configure providers and the skill, then seed the agent. Both are idempotent,

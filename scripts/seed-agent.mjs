@@ -62,11 +62,22 @@ if (connectors && connectors.ok) {
 // Recipes the agent has authored and a human has merged are registered as skills
 // named `recipe-<slug>`; attach every one that is registered, so a second run on
 // a known data source can match its recipe instead of asking again.
-let sandboxConfigured = false;
+// Three states, not two: a provider is configured, definitively absent, or the
+// lookup failed. Only a definitive absence may disable the sandbox — a transient
+// settings-API failure must not strip code execution from a working agent.
+let sandboxState = "unknown";
 const sandbox = await api("/api/v1/settings/sandbox-providers").catch(() => null);
+let providerType;
 if (sandbox && sandbox.ok) {
-  const provider = (await sandbox.json()).data;
-  sandboxConfigured = Boolean(provider?.type);
+  // The settings API wraps the provider: { data: { manifest: { type } } }.
+  const body = (await sandbox.json()).data;
+  providerType = body?.manifest?.type ?? body?.type;
+  sandboxState = providerType ? "configured" : "absent";
+} else if (sandbox && sandbox.status === 404) {
+  sandboxState = "absent"; // the server answered: there is none
+}
+if (sandboxState === "configured") {
+  const provider = { type: providerType };
   if (provider?.type === "daytona") {
     const registered = await api("/api/v1/settings/skills").catch(() => null);
     const names =
@@ -89,7 +100,12 @@ const existing = agents.find((a) => a.name === spec.name);
 // one. Seed it sandbox-disabled rather than not at all: the agent then appears
 // in the library and can be inspected, and re-running seed once a provider is
 // configured restores full capability.
-if (!sandboxConfigured) {
+if (sandboxState === "unknown") {
+  console.warn(
+    "Could not determine whether a sandbox provider is configured; leaving the manifest unchanged.",
+  );
+}
+if (sandboxState === "absent") {
   spec.manifest.config = { ...spec.manifest.config, sandbox: { enabled: false, file_downloads: false } };
   spec.manifest.skills = [];
   console.warn(
