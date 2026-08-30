@@ -377,7 +377,7 @@ merge; no feature work reaches `main` directly. Review priorities are codified i
 [`.pr-agent.toml`](.pr-agent.toml): secret hygiene, API correctness, determinism,
 and whether the project still runs from a clean clone.
 
-**24 merged pull requests, every one carrying its review thread.** Findings were
+**Every merged pull request carries its review thread.** Findings were
 fixed or argued in the thread before merge — Qodo updates its review in place, so
 the response comment on each PR is the durable record of what was raised and what
 was done about it.
@@ -465,7 +465,7 @@ Every claim below links to a transcript or a command you can run yourself.
 | **State survives a long repair** | One session spans profile → clarify → plan → approve → apply → deliver — see the [flagship run transcript](docs/evidence/flagship-run.md) |
 | **Built on TrueForge** | Sandbox-as-tool, `ask_user_questions`, gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) on its own thread, persistent sessions, [context management at scale](docs/evidence/scale-run.md) |
 | **It learns, reviewably** | The agent authors a cleaning policy as a skill and delivers it as a PR; a human merge is what makes it policy — [run 2: five questions become one](docs/evidence/run2-recipe.md) |
-| **Reviewed before merge** | [24 merged PRs, each with its review thread](#qodo-code-review-evidence). The findings that changed the design: a recipe that could never reach the agent, a template demanding impossible provenance, a scheduled run with nobody to approve it, and a scorer that proved the wrong thing |
+| **Reviewed before merge** | [Every merged PR carries its review thread](#qodo-code-review-evidence). The findings that changed the design: a recipe that could never reach the agent, a template demanding impossible provenance, a scheduled run with nobody to approve it, and a scorer that proved the wrong thing |
 | **Delivery you can inspect** | [PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 
 ## Limitations
