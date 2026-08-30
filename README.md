@@ -16,6 +16,8 @@ messy.csv ──▶ PROFILE ──▶ CLARIFY ──▶ PLAN ──▶ 🛑 APPR
                 (sandbox)  (ask-user)  (previews)   (human decides)    (sandbox)  (assertions)  (gated PR)  (recipe PR)
 ```
 
+**▶ [Watch the 3-minute demo](https://youtu.be/AT2VMDGnKN0)** · **[Try it live](https://cleanroom-production.up.railway.app)** — no signup, open it and give it a file.
+
 Built for [The Agent Harness Hackathon](https://www.wemakedevs.org/hackathons/trueforge)
 (WeMakeDevs × TrueFoundry, Aug 24–30, 2026).
 
@@ -373,9 +375,9 @@ delivery as a pull request; chat UI for interaction.
 Every pull request in this repo is reviewed by [Qodo](https://www.qodo.ai) before
 merge; no feature work reaches `main` directly. Review priorities are codified in
 [`.pr-agent.toml`](.pr-agent.toml): secret hygiene, API correctness, determinism,
-judge runnability.
+and whether the project still runs from a clean clone.
 
-**20 merged pull requests, every one carrying its review thread.** Findings were
+**23 merged pull requests, every one carrying its review thread.** Findings were
 fixed or argued in the thread before merge — Qodo updates its review in place, so
 the response comment on each PR is the durable record of what was raised and what
 was done about it.
@@ -448,22 +450,23 @@ and Qodo's own alternative-approach note on
 [PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) is deliberately still
 open: the agent opened it, and a human merging it **is** the acceptance step.
 
-## Where to see each judging criterion
+## What it does, and where to verify it
 
-| Criterion | Evidence |
+Every claim below links to a transcript or a command you can run yourself.
+
+| Capability | Where to see it |
 |---|---|
-| **It knows when *not* to act** | On [6,000 rows of real payroll](docs/evidence/real-payroll-run.md) — 18/18 checks exact — it **refused to recompute 762 pay mismatches**, the same defect shape it fixes on the sales corpus, because `base_salary` is a rate rather than an expected total and no stored total exists to reconcile against. All five of its questions recommended preserve-and-flag |
-| Runs where you can reach it | A [hosted instance](https://cleanroom-production.up.railway.app) executes the whole pipeline — sandbox, subagent, recipe match, approval gate — [transcript](docs/evidence/hosted-run.md) |
-| Works on unfamiliar real data | [5,000 rows of NYC 311](docs/evidence/real-world-run.md), nothing planted: 8/8 checks exact, and it corrected the verification script three times |
-| Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
-| Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
-| Control & safety (pause before irreversible) | Plan gate + per-write `tool.approval_required` events captured in the demo video, uncut |
-| Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
-| Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, [context management at scale](docs/evidence/scale-run.md), generative UI enabled |
-| Recipes / skills | The agent authors a cleaning policy as a skill and delivers it as a PR; a human merge is what makes it policy — [run 2: five questions become one](docs/evidence/run2-recipe.md) |
-| Use of Qodo | [20 merged PRs, each with its review thread](#qodo-code-review-evidence). The findings that changed the design: a recipe that could never reach the agent, a template demanding impossible provenance, a scheduled run with nobody to approve it, and a scorer that proved the wrong thing |
-| Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
-| Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
+| **It knows when *not* to act** | On [6,000 rows of real NYC payroll](docs/evidence/real-payroll-run.md) — 18/18 checks exact — it **refused to recompute 762 pay mismatches**, the same defect shape it fixes on the sales corpus, because `base_salary` is a rate rather than an expected total and no stored total exists to reconcile against. All five of its questions recommended preserve-and-flag |
+| **Works on unfamiliar real data** | [5,000 rows of NYC 311](docs/evidence/real-world-run.md), nothing planted: 8/8 checks exact — and it corrected the verification script three times |
+| **Numbers come from code that ran** | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live |
+| **Holds up at scale** | [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) on 10,000 rows, against a ground-truth manifest |
+| **Context stays manageable** | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
+| **Pauses before anything irreversible** | The gate firing, uncut, in the [3-minute demo](https://youtu.be/AT2VMDGnKN0) — plus per-write `tool.approval_required` events in the [flagship run transcript](docs/evidence/flagship-run.md). Trigger it yourself on the [live instance](https://cleanroom-production.up.railway.app) |
+| **State survives a long repair** | One session spans profile → clarify → plan → approve → apply → deliver — see the [flagship run transcript](docs/evidence/flagship-run.md) |
+| **Built on TrueForge** | Sandbox-as-tool, `ask_user_questions`, gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) on its own thread, persistent sessions, [context management at scale](docs/evidence/scale-run.md) |
+| **It learns, reviewably** | The agent authors a cleaning policy as a skill and delivers it as a PR; a human merge is what makes it policy — [run 2: five questions become one](docs/evidence/run2-recipe.md) |
+| **Reviewed before merge** | [23 merged PRs, each with its review thread](#qodo-code-review-evidence). The findings that changed the design: a recipe that could never reach the agent, a template demanding impossible provenance, a scheduled run with nobody to approve it, and a scorer that proved the wrong thing |
+| **Delivery you can inspect** | [PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 
 ## Limitations
 
@@ -476,8 +479,8 @@ Stated plainly, because a tool you can trust is one whose edges you know.
   and the [payroll run](docs/evidence/real-payroll-run.md) show the agent handling
   real municipal and financial data nobody prepared for it, but two corpora are a
   demonstration, not a guarantee across domains.
-- **Demo corpus is deterministic and demo-scale by design** (42 rows), so the
-  same findings appear on every run and a judge can verify each number by hand.
+- **Demo corpus is deterministic and small by design** (42 rows), so the same
+  findings appear on every run and you can verify each number by hand.
   A [10,000-row run](docs/evidence/scale-run.md) is published alongside it,
   scored against a generated manifest of ground truth.
 - **Date inference is evidence-based, not clairvoyant.** A slash date is
@@ -507,7 +510,7 @@ Stated plainly, because a tool you can trust is one whose edges you know.
 - [x] Agent spec, skill methodology, sample corpus, seeding pipeline
 - [x] End-to-end vertical slice on live TrueForge (profile → clarify → plan → gate → verify)
 - [x] Approval-gated delivery as a pull request ([PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — opened by the agent)
-- [x] Scripted replay for judges (`npm run demo`)
+- [x] Scripted one-command replay (`npm run demo`)
 - [x] Dynamic subagent delegation for category analysis ([transcript](docs/evidence/subagent-run.md))
 - [x] Recipes: the agent distills a run into a policy and delivers it as a PR
       ([DISTILL, matching, and the recipe template](docs/recipe-template.md));
