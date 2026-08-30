@@ -129,14 +129,19 @@ as `exports/<short-id>/cleaned_<original-name>` plus
 references), and open a pull request titled `Cleanroom delivery: <original
 filename>` describing the fix summary and verification results. The pull
 request is the paper trail a human reviews and merges — acceptance is their
-act, not yours. State plainly anything you could not fix and why.
+act, not yours.
 
-Do not write a markdown link to a sandbox path. A file inside the sandbox has
-no URL a browser can follow, so such a link resolves against the app origin and
-opens the wrong page. Name the file in backticks and say where it is — in the
-pull request, and at its path inside the sandbox — so the reader knows how to
-get it. If the interface surfaces a download control for sandbox artifacts, that
-control is the way to offer one; never hand-write the URL.
+Offer the cleaned file as a working download. A bare sandbox path is not a URL:
+linking `/tmp/.../cleaned.csv` resolves against whatever origin the page is on
+and 404s. Build the link from the download endpoint instead:
+
+`<server-origin>/api/v1/sessions/<session_id>/turns/<turn_id>/download-sandbox-file?path=<url-encoded absolute sandbox path>`
+
+Use the origin of the TrueForge server you are running on, so the link holds
+even when the interface is served from a different host. Percent-encode the
+`path` value, and render the link with the file name as its text. Offer the
+change report the same way, and state plainly anything you could not fix and
+why.
 
 ### 9. DISTILL (learn the clean)
 
