@@ -332,12 +332,17 @@ changed the design.
 
 ### Findings that corrected the documentation
 
-Three separate reviews caught the README claiming more than the repo could show —
-a filesystem-MCP delivery path that was never built ([#8](https://github.com/sreenathmmenon/cleanroom/pull/8)),
-a generative-UI rendering claim that could not be verified ([#13](https://github.com/sreenathmmenon/cleanroom/pull/13)),
-and a UI fix that did not actually fix the bug ([#16](https://github.com/sreenathmmenon/cleanroom/pull/16)).
-Each claim was corrected or deleted rather than softened. A `:3000` port that
-would have sent a fresh clone to the wrong server was caught the same way.
+Review findings on [#8](https://github.com/sreenathmmenon/cleanroom/pull/8) caught
+the README claiming more than the repo could show, including a `:3000` port that
+would have sent a fresh clone to the wrong server and a scale claim with no run
+behind it. Two further corrections were **self-caught while verifying claims
+against the code**, and shipped as their own PRs rather than being quietly
+edited: a generative-UI rendering claim that could not be verified
+([#13](https://github.com/sreenathmmenon/cleanroom/pull/13)), and a React pin
+written up as fixing a bug it did not fix
+([#16](https://github.com/sreenathmmenon/cleanroom/pull/16), found by opening the
+UI in a browser). Those two reviews came back clean because the PRs existed to
+retract the claims.
 
 ### A finding dismissed, with an argument
 
@@ -363,10 +368,10 @@ and Qodo's own alternative-approach note on
 | [#10](https://github.com/sreenathmmenon/cleanroom/pull/10) | DISTILL: recipes as pull requests | 6 findings — recipe loading, resume chaining, unattended guessing, schema hash, exit code, impossible provenance |
 | [#11](https://github.com/sreenathmmenon/cleanroom/pull/11) | 10,000-row scale run | Manifest drift, near-duplicate contract, missing transcript |
 | [#12](https://github.com/sreenathmmenon/cleanroom/pull/12) | Standing pipeline / schedules | Approval gate blocks schedules; recipe identity; flag parsing |
-| [#13](https://github.com/sreenathmmenon/cleanroom/pull/13) | Generative-UI claim corrected | Clean |
+| [#13](https://github.com/sreenathmmenon/cleanroom/pull/13) | Generative-UI claim corrected | Review clean; the PR itself removes an unverifiable claim |
 | [#14](https://github.com/sreenathmmenon/cleanroom/pull/14) | Recipes proven end to end + refusal | Fixture executed nothing; misnamed row; capture scope |
 | [#15](https://github.com/sreenathmmenon/cleanroom/pull/15) | Roadmap updated to shipped state | Evidence link ahead of its PR; undocumented UI build |
-| [#16](https://github.com/sreenathmmenon/cleanroom/pull/16) | UI session-replay bug documented | Clean |
+| [#16](https://github.com/sreenathmmenon/cleanroom/pull/16) | UI session-replay bug documented | Review clean; the PR itself retracts a fix that did not work |
 | [#17](https://github.com/sreenathmmenon/cleanroom/pull/17) | Demo script act two | Replay had no recipe to match |
 | [#18](https://github.com/sreenathmmenon/cleanroom/pull/18) | Scripted refusal replay | Clean |
 | [#19](https://github.com/sreenathmmenon/cleanroom/pull/19) | Real data: 5,000 rows of NYC 311 | 5 findings — unexecutable score, local paths, impossible date, count conflict, overstated diagnosis |
