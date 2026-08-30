@@ -303,20 +303,83 @@ delivery as a pull request; chat UI for interaction.
 
 ## Qodo Code Review Evidence
 
-Every PR in this repo is reviewed by [Qodo](https://www.qodo.ai) before merge;
-direct pushes to `main` carry no feature work. Review priorities are codified in
-[`.pr-agent.toml`](.pr-agent.toml): secret hygiene, API correctness,
-determinism, judge runnability.
+Every pull request in this repo is reviewed by [Qodo](https://www.qodo.ai) before
+merge; no feature work reaches `main` directly. Review priorities are codified in
+[`.pr-agent.toml`](.pr-agent.toml): secret hygiene, API correctness, determinism,
+judge runnability.
 
-| PR | Qodo findings | Our response |
+**20 merged pull requests, every one carrying its review thread.** Findings were
+fixed or argued in the thread before merge — Qodo updates its review in place, so
+the response comment on each PR is the durable record of what was raised and what
+was done about it.
+
+The summary that matters: the valuable findings were not typos. They were
+**claims outrunning their evidence** — features that could not have worked as
+described, and verification that verified less than it advertised. Each one
+changed the design.
+
+### The findings that changed the product
+
+| Finding | Why it mattered | Response |
 |---|---|---|
-| [#1 — scaffold + bring-up](https://github.com/sreenathmmenon/cleanroom/pull/1) | 11 bugs across 4 review passes (env-precedence mismatch, text dates unparseable, ambiguous dates silently guessed, key fragments in logs, success output after failed setup, TDZ ordering, …) | 10 fixed in four follow-up commits on the same PR; 1 security finding (classic-token scope) [dismissed with a written rotation argument](https://github.com/sreenathmmenon/cleanroom/pull/1#issuecomment-5461708004) |
-| [#2 — scripted demo](https://github.com/sreenathmmenon/cleanroom/pull/2) | 0 bugs; alternative-approach note (streaming vs polling) | [Kept polling per Qodo's own recommendation](https://github.com/sreenathmmenon/cleanroom/pull/2#issuecomment-5461756405) — dependency-free, explicit turn resumption |
-| [#3 — local-skill decoupling](https://github.com/sreenathmmenon/cleanroom/pull/3) | 3 suggestions | [Conditional skill attach implemented](https://github.com/sreenathmmenon/cleanroom/pull/3#issuecomment-5461769466); two deferred with reasons |
+| *"Ambiguous dates are silently guessed"* — [#1](https://github.com/sreenathmmenon/cleanroom/pull/1) | The agent was picking a date format on the user's behalf | Became **evidence-based inference**: a component > 12 proves the order, and with no proof the agent asks. Now the demo's signature behaviour |
+| *"Recipes never reach agent"* — [#10](https://github.com/sreenathmmenon/cleanroom/pull/10) | Config registered only one fixed skill, so a merged recipe was invisible. The entire second-run story had no path from a merged file to a running agent | `recipe:register` + conditional attach of every `recipe-*` skill, with a documented raw-URL fallback |
+| *"Merge provenance cannot exist"* — [#10](https://github.com/sreenathmmenon/cleanroom/pull/10) | The recipe template demanded each recipe state who merged it and when — facts that cannot exist inside the PR that introduces the file | Recipes record only what is knowable at authoring time; the merge is its own record |
+| *"Approval gate blocks schedules"* — [#12](https://github.com/sreenathmmenon/cleanroom/pull/12) | A scheduled run has nobody to approve it, so the standing pipeline could not complete | Scheduled runs **prepare and stop**: profile, apply to a copy, verify, then wait. Auto-approving would have deleted the product to ship a feature |
+| *"Refusal fixture tests nothing"* — [#14](https://github.com/sreenathmmenon/cleanroom/pull/14) | A fixture proving a refusal that no command executed | `npm run check:recipe-guard` + `demo:recipe --refuse`; verified to fail on regression |
+| *"Scorer ignores corpus fingerprint"* — [#21](https://github.com/sreenathmmenon/cleanroom/pull/21) | The scorer proved *some* file produced those counts, not *the* file. Matching counts is not provenance | Both scorers now bind to the corpus SHA-256 and cross-check the reference JSON |
+| *"Recorded reference values skipped"* — [#22](https://github.com/sreenathmmenon/cleanroom/pull/22) | The cross-check silently skipped values stored under a different shape — in a script whose only job is catching that | Every reference value mapped explicitly; a missing key is a failure, not a skip |
 
-The finding that shaped the product most: *"Ambiguous dates are guessed"* →
-became the evidence-based inference (a component >12 proves its side), which is
-now the demo's signature behavior.
+### Findings that corrected the documentation
+
+Review findings on [#8](https://github.com/sreenathmmenon/cleanroom/pull/8) caught
+the README claiming more than the repo could show, including a `:3000` port that
+would have sent a fresh clone to the wrong server and a scale claim with no run
+behind it. Two further corrections were **self-caught while verifying claims
+against the code**, and shipped as their own PRs rather than being quietly
+edited: a generative-UI rendering claim that could not be verified
+([#13](https://github.com/sreenathmmenon/cleanroom/pull/13)), and a React pin
+written up as fixing a bug it did not fix
+([#16](https://github.com/sreenathmmenon/cleanroom/pull/16), found by opening the
+UI in a browser). Those two reviews came back clean because the PRs existed to
+retract the claims.
+
+### A finding dismissed, with an argument
+
+Not every finding is right. A security finding on
+[#1](https://github.com/sreenathmmenon/cleanroom/pull/1) (classic-token scope)
+was [dismissed in-thread with a written rotation argument](https://github.com/sreenathmmenon/cleanroom/pull/1#issuecomment-5461708004),
+and Qodo's own alternative-approach note on
+[#2](https://github.com/sreenathmmenon/cleanroom/pull/2) was
+[answered by keeping the polling design it recommended](https://github.com/sreenathmmenon/cleanroom/pull/2#issuecomment-5461756405).
+
+### The full trail
+
+| PR | Subject | Review thread |
+|---|---|---|
+| [#1](https://github.com/sreenathmmenon/cleanroom/pull/1) | Scaffold, manifest, skill, corpus, seed pipeline | 4 review passes; 11 findings, 10 fixed + 1 argued |
+| [#2](https://github.com/sreenathmmenon/cleanroom/pull/2) | Scripted demo with live approval gates | Alternative-approach note, answered |
+| [#3](https://github.com/sreenathmmenon/cleanroom/pull/3) | Local-sandbox skill decoupling | 3 suggestions; 1 implemented, 2 deferred with reasons |
+| [#5](https://github.com/sreenathmmenon/cleanroom/pull/5) | README evidence map | Clean |
+| [#6](https://github.com/sreenathmmenon/cleanroom/pull/6) | Branded UI embed | Clean |
+| [#7](https://github.com/sreenathmmenon/cleanroom/pull/7) | UI runtime: same-origin proxy, React 18 | Stream error handling, dev proxy, truncated-asset 200s |
+| [#8](https://github.com/sreenathmmenon/cleanroom/pull/8) | README truthing, limitations, disclosure | Delivery credential, dangling anchor, unearned session claim |
+| [#9](https://github.com/sreenathmmenon/cleanroom/pull/9) | Dynamic subagent delegation | Delegated ambiguities could be dropped |
+| [#10](https://github.com/sreenathmmenon/cleanroom/pull/10) | DISTILL: recipes as pull requests | 6 findings — recipe loading, resume chaining, unattended guessing, schema hash, exit code, impossible provenance |
+| [#11](https://github.com/sreenathmmenon/cleanroom/pull/11) | 10,000-row scale run | Manifest drift, near-duplicate contract, missing transcript |
+| [#12](https://github.com/sreenathmmenon/cleanroom/pull/12) | Standing pipeline / schedules | Approval gate blocks schedules; recipe identity; flag parsing |
+| [#13](https://github.com/sreenathmmenon/cleanroom/pull/13) | Generative-UI claim corrected | Review clean; the PR itself removes an unverifiable claim |
+| [#14](https://github.com/sreenathmmenon/cleanroom/pull/14) | Recipes proven end to end + refusal | Fixture executed nothing; misnamed row; capture scope |
+| [#15](https://github.com/sreenathmmenon/cleanroom/pull/15) | Roadmap updated to shipped state | Evidence link ahead of its PR; undocumented UI build |
+| [#16](https://github.com/sreenathmmenon/cleanroom/pull/16) | UI session-replay bug documented | Review clean; the PR itself retracts a fix that did not work |
+| [#17](https://github.com/sreenathmmenon/cleanroom/pull/17) | Demo script act two | Replay had no recipe to match |
+| [#18](https://github.com/sreenathmmenon/cleanroom/pull/18) | Scripted refusal replay | Clean |
+| [#19](https://github.com/sreenathmmenon/cleanroom/pull/19) | Real data: 5,000 rows of NYC 311 | 5 findings — unexecutable score, local paths, impossible date, count conflict, overstated diagnosis |
+| [#21](https://github.com/sreenathmmenon/cleanroom/pull/21) | Real money: 6,000 rows of NYC payroll | Missing check; date conflict; fingerprint; transcript |
+| [#22](https://github.com/sreenathmmenon/cleanroom/pull/22) | Scorer provenance binding | Skipped reference values; wrong denominator |
+
+[PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) is deliberately still
+open: the agent opened it, and a human merging it **is** the acceptance step.
 
 ## Where to see each judging criterion
 
@@ -330,7 +393,7 @@ now the demo's signature behavior.
 | Persistent sessions | A full repair spans many turns on one session — profile, clarify, plan, approve, apply, deliver — as the [flagship run transcript](docs/evidence/flagship-run.md) shows. Browser reattachment mid-run is a planned demo shot (`docs/demo-script.md`), not yet a captured artifact |
 | Use of TrueForge | Sandbox-as-tool, ask-user-questions (5-question round), gated MCP writes, [dynamic subagent delegation](docs/evidence/subagent-run.md) (its own thread, `thread.created`/`thread.done`), persistent sessions, [context management at scale](docs/evidence/scale-run.md), generative UI enabled |
 | Recipes / skills | The agent authors a cleaning policy as a skill and delivers it as a PR; a human merge is what makes it policy — [run 2: five questions become one](docs/evidence/run2-recipe.md) |
-| Use of Qodo | Table above; every merged PR carries its review thread |
+| Use of Qodo | [20 merged PRs, each with its review thread](#qodo-code-review-evidence). The findings that changed the design: a recipe that could never reach the agent, a template demanding impossible provenance, a scheduled run with nobody to approve it, and a scorer that proved the wrong thing |
 | Technical excellence | [Delivery PR #4](https://github.com/sreenathmmenon/cleanroom/pull/4) — agent-authored, with an 86-line change report, row reconciliation, and verification suite output |
 | Presentation | 3-minute demo video (link at submission) following `docs/demo-script.md` |
 
