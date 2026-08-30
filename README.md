@@ -103,6 +103,25 @@ difference, and every capability below is load-bearing:
 | Persistent sessions | A dataset's cleaning history survives across turns — refine instead of restart |
 | Context management | Large profiling outputs offload to the sandbox instead of flooding context |
 
+## Try it without installing anything
+
+A deployed instance runs at
+**[cleanroom-production.up.railway.app](https://cleanroom-production.up.railway.app)**
+with the agent, its skill and its sandbox already configured. Open it, pick
+Cleanroom from the Agents Library, and paste a corpus URL — for example
+`https://raw.githubusercontent.com/sreenathmmenon/cleanroom/main/data/samples/sales_export_messy.csv`.
+
+The full pipeline runs there, not just the UI:
+[a hosted run](docs/evidence/hosted-run.md) executes profiling code in a Daytona
+sandbox, delegates category analysis to a subagent, matches the stored recipe by
+schema signature, and stops to ask. It also recovers from two of its own errors
+mid-run and says exactly what did and did not touch the data.
+
+That instance has **no login** — TrueForge's only auth is OIDC, which is
+unavailable in the single-container mode this uses. It is a demo instance, torn
+down after review. Run it locally for anything else; see
+[`DEPLOY.md`](DEPLOY.md).
+
 ## Quickstart
 
 Prereqs: Node 22+, a model API key, a free [Daytona](https://daytona.io) key.
@@ -434,6 +453,7 @@ open: the agent opened it, and a human merging it **is** the acceptance step.
 | Criterion | Evidence |
 |---|---|
 | **It knows when *not* to act** | On [6,000 rows of real payroll](docs/evidence/real-payroll-run.md) — 18/18 checks exact — it **refused to recompute 762 pay mismatches**, the same defect shape it fixes on the sales corpus, because `base_salary` is a rate rather than an expected total and no stored total exists to reconcile against. All five of its questions recommended preserve-and-flag |
+| Runs where you can reach it | A [hosted instance](https://cleanroom-production.up.railway.app) executes the whole pipeline — sandbox, subagent, recipe match, approval gate — [transcript](docs/evidence/hosted-run.md) |
 | Works on unfamiliar real data | [5,000 rows of NYC 311](docs/evidence/real-world-run.md), nothing planted: 8/8 checks exact, and it corrected the verification script three times |
 | Harness visibly does real work | Sandbox-executed profiling with measured counts — [flagship run transcript](docs/evidence/flagship-run.md); `npm run demo` reproduces it live. At 10,000 rows, [12/12 planted issue classes detected exactly](docs/evidence/scale-run.md) against a ground-truth manifest |
 | Context management | The 10k-row run wrote per-row detail to sandbox files and brought back only the summary table — [scale run](docs/evidence/scale-run.md) |
