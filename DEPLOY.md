@@ -61,16 +61,22 @@ sandbox, but only when the host supports it — on Linux that needs `bwrap`,
 `socat`, and `rg` plus namespace privileges most container runtimes do not grant.
 So in practice a container deployment wants `DAYTONA_API_KEY` set.
 
-A Daytona key needs **Snapshots write** permission. A key without it authenticates
-fine and still fails, because TrueForge validates by creating a snapshot:
+A Daytona key needs **Snapshots write** permission — "Sandboxes Access" alone is
+not enough. A key without it authenticates fine and still fails, because
+TrueForge validates by creating a snapshot:
 
 ```
 GET  /api/snapshots  → 200   (read works)
 POST /api/snapshots  → 403   Access denied
 ```
 
-TrueForge surfaces that as `422 Daytona rejected the API key`. If you see it,
-the key is real but under-permissioned — recreate it with Snapshots write.
+TrueForge surfaces that as `422 Daytona rejected the API key`, which reads like a
+bad credential rather than a missing permission. If you see it, the key is real
+but under-permissioned.
+
+In the Daytona dashboard, create a key with **Restricted Access** and grant
+Sandboxes write + delete, Snapshots write + delete, Registries write, and Volumes
+read + write. Full Access works too but grants more than TrueForge needs.
 
 Without a working sandbox the agent still intakes, plans, clarifies, and gates;
 it cannot execute the profiling code, which is the part worth watching. Run
