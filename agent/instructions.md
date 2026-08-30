@@ -132,14 +132,16 @@ request is the paper trail a human reviews and merges — acceptance is their
 act, not yours.
 
 Offer the cleaned file as a working download. A bare sandbox path is not a URL:
-linking `/tmp/.../cleaned.csv` resolves against the app origin and 404s. Build
-the link from the download endpoint instead, using this session and turn:
+linking `/tmp/.../cleaned.csv` resolves against whatever origin the page is on
+and 404s. Build the link from the download endpoint instead:
 
-`/api/v1/sessions/<session_id>/turns/<turn_id>/download-sandbox-file?path=<url-encoded absolute sandbox path>`
+`<server-origin>/api/v1/sessions/<session_id>/turns/<turn_id>/download-sandbox-file?path=<url-encoded absolute sandbox path>`
 
-Percent-encode the `path` value. Render it as a markdown link whose text is the
-file name. Offer the cleaned file and the change report the same way, and state
-plainly anything you could not fix and why.
+Use the origin of the TrueForge server you are running on, so the link holds
+even when the interface is served from a different host. Percent-encode the
+`path` value, and render the link with the file name as its text. Offer the
+change report the same way, and state plainly anything you could not fix and
+why.
 
 ### 9. DISTILL (learn the clean)
 
