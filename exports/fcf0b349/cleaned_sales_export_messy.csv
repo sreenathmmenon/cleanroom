@@ -1,0 +1,41 @@
+order_id,order_date,customer,region,product,qty,unit_price,total,status
+1001,2026-03-04,Acme Corp,NYC,Widget Pro,3,1234.50,3703.50,shipped
+1002,2026-03-04,Globex Incorporated,NYC,Widget Lite,10,89.99,899.90,shipped
+1003,2026-03-06,Initech,NYC,Gadget X,2,2150.00,4300.00,shipped
+1004,2026-03-07,Umbrella Ltd,West,Widget Pro,5,1234.50,6172.50,pending
+1005,2026-03-07,Umbrella Ltd,West,Widget Pro,5,1234.50,6172.50,pending
+1006,2026-03-12,Stark Industries,East,Gadget X,1,2150.00,2150.00,shipped
+1007,2026-03-09,Wayne Enterprises,NYC,Gizmo Mini,20,45.00,900.00,shipped
+1008,2026-03-10,,West,Widget Lite,4,89.99,359.96,shipped
+1009,2026-03-15,Soylent Co,West,Gadget X,2,2150.00,4300.00,shipped
+1010,2026-03-12,Hooli,NYC,Widget Pro,-2,1234.50,-2469.00,cancelled
+1011,2026-03-13,Acme Corp,NYC,Gizmo Mini,15,45.00,675.00,pending
+1012,2026-03-14,Massive Dynamic,East,Widget Lite,8,89.99,719.92,shipped
+1013,2026-03-15,Globex Incorporated,NYC,Gadget X,,,,shipped
+1014,2026-03-16,Initech,West,Widget Pro,6,1234.50,7407.00,shipped
+1015,2026-03-17,Vehement Capital,NYC,Gizmo Mini,12,45.00,540.00,shipped
+1016,2026-03-18,Stark Industries,East,Widget Lite,3,89.99,269.97,shipped
+1017,2026-03-19,,NYC,Gadget X,1,2150.00,2150.00,pending
+1018,2026-03-20,Umbrella Ltd,West,Widget Pro,7,1234.50,8641.50,shipped
+1019,2026-03-22,Wayne Enterprises,NYC,Gizmo Mini,25,45.00,1125.00,shipped
+1020,2026-03-23,Hooli,NYC,Widget Lite,10,89.99,899.90,shipped
+1021,2026-03-24,Soylent Co,NYC,Gadget X,2,2150.00,4300.00,shipped
+1022,2026-03-25,Massive Dynamic,West,Widget Pro,4,1234.50,4938.00,pending
+1023,2026-03-26,Acme Corp,East,Gizmo Mini,18,45.00,810.00,shipped
+1024,2026-03-27,Initech,NYC,Gadget X,1,2150.00,2150.00,shipped
+1025,2026-03-28,Vehement Capital,West,Widget Lite,6,89.99,539.94,shipped
+1026,2026-03-29,Globex Incorporated,NYC,Widget Pro,2,1234.50,2469.00,shipped
+1027,2026-03-30,Stark Industries,NYC,Gizmo Mini,30,45.00,1350.00,shipped
+1028,2026-03-31,Umbrella Ltd,East,Gadget X,3,2150.00,6450.00,shipped
+1029,2026-04-01,Hooli,NYC,Widget Lite,5,89.99,449.95,pending
+1030,2026-04-02,Wayne Enterprises,NYC,Widget Pro,9,1234.50,11110.50,shipped
+1031,2026-04-03,Soylent Co,West,Gizmo Mini,22,45.00,990.00,shipped
+1032,2026-04-04,Massive Dynamic,NYC,Gadget X,2,2150.00,4300.00,shipped
+1033,2026-04-05,,East,Widget Lite,7,89.99,629.93,shipped
+1034,2026-04-06,Vehement Capital,NYC,Widget Pro,1,1234.50,1234.50,pending
+1035,2026-04-07,Acme Corp,West,Gizmo Mini,14,45.00,630.00,shipped
+1036,2026-04-08,Initech,NYC,Gadget X,2,2150.00,4300.00,shipped
+1037,2026-04-09,Globex Incorporated,East,Widget Lite,11,89.99,989.89,shipped
+1038,2026-04-10,Stark Industries,West,Widget Pro,3,1234.50,3703.50,shipped
+1039,2026-04-11,Hooli,NYC,Gizmo Mini,19,45.00,855.00,shipped
+1040,2026-04-12,Umbrella Ltd,NYC,Gadget X,4,2150.00,8600.00,shipped
