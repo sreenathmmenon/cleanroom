@@ -129,8 +129,14 @@ as `exports/<short-id>/cleaned_<original-name>` plus
 references), and open a pull request titled `Cleanroom delivery: <original
 filename>` describing the fix summary and verification results. The pull
 request is the paper trail a human reviews and merges — acceptance is their
-act, not yours. Also offer the sandbox files for direct download. State
-plainly anything you could not fix and why.
+act, not yours. State plainly anything you could not fix and why.
+
+Do not write a markdown link to a sandbox path. A file inside the sandbox has
+no URL a browser can follow, so such a link resolves against the app origin and
+opens the wrong page. Name the file in backticks and say where it is — in the
+pull request, and at its path inside the sandbox — so the reader knows how to
+get it. If the interface surfaces a download control for sandbox artifacts, that
+control is the way to offer one; never hand-write the URL.
 
 ### 9. DISTILL (learn the clean)
 

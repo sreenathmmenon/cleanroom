@@ -13,7 +13,7 @@ flowchart LR
     TF -- "write cleaned + report" --> FS["GitHub MCP<br/>(@write requires approval)"]
     FS -- "gated writes" --> OUT["branch + PR<br/>exports/&lt;id&gt;/"]
     OUT -- "human reviews & merges" --> U
-    TF -- "download offer" --> U
+    TF -- "file named + located" --> U
 ```
 
 ## Components
@@ -23,7 +23,7 @@ flowchart LR
 | Agent manifest | `agent/cleanroom.agent.json` | Model, MCP servers, skill refs, runtime config — applied via `scripts/seed-agent.mjs` (PUT/POST `/api/v1/agents`) |
 | System prompt | `agent/instructions.md` | The 9-phase workflow: INTAKE → PROFILE → CLARIFY → PLAN → GATE → APPLY → VERIFY → DELIVER → DISTILL |
 | Skill | `skills/data-cleaning/SKILL.md` | Git-backed methodology: profiling checklist, fix catalog, pandas patterns, verification suite, change-report format |
-| Sandbox | TrueForge → Daytona | Isolated execution; `file_downloads` enabled for artifact retrieval |
+| Sandbox | TrueForge → Daytona | Isolated execution; `file_downloads` enabled, so artifacts are retrievable where the interface exposes a download control |
 | GitHub MCP | TrueForge Connectors | Delivery: branch, commit, and open a PR — **every write requires human approval** (the formal gate) |
 | Sample corpus | `data/samples/` | Deterministic messy datasets so a demo reproduces exactly — `sales_export_messy.csv` (first run) and `sales_export_messy_week2.csv` (second run, same schema, one unseen category) |
 | Recipes | `skills/recipes/<slug>/SKILL.md` | Standing cleaning policy per data source, authored by the agent at DISTILL and delivered as a pull request — merging it is what makes it policy |
