@@ -87,7 +87,7 @@ before anything irreversible.
 4. **Plan** — a numbered fix plan, each step labeled safe or **destructive**, with before/after previews and post-conditions.
 5. **Approval gate** — the agent stops. You approve, edit, or reject the plan. This is the product, not a speed bump.
 6. **Apply + Verify** — fixes run in the sandbox against a copy; a verification suite asserts row reconciliation, dtype/null post-conditions, and pipeline idempotence.
-7. **Deliver** — the agent opens a **pull request** through the GitHub MCP server: a branch `cleanroom/delivery-<id>` carrying `exports/<id>/cleaned_<name>` and `exports/<id>/change_report.md`. Every write is individually approval-gated, and the PR is the paper trail a human reviews and merges — acceptance is your act, not the agent's. The cleaned file is named and located for you — in the pull request, and at its path in the sandbox. Your original is never modified.
+7. **Deliver** — the agent opens a **pull request** through the GitHub MCP server: a branch `cleanroom/delivery-<id>` carrying `exports/<id>/cleaned_<name>` and `exports/<id>/change_report.md`. Every write is individually approval-gated, and the PR is the paper trail a human reviews and merges — acceptance is your act, not the agent's. The cleaned file and its change report are also offered as direct downloads from the sandbox. Your original is never modified.
 
 ## Why TrueForge (and not a script, and not a chatbot)
 
