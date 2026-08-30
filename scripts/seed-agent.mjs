@@ -62,9 +62,11 @@ if (connectors && connectors.ok) {
 // Recipes the agent has authored and a human has merged are registered as skills
 // named `recipe-<slug>`; attach every one that is registered, so a second run on
 // a known data source can match its recipe instead of asking again.
+let sandboxConfigured = false;
 const sandbox = await api("/api/v1/settings/sandbox-providers").catch(() => null);
 if (sandbox && sandbox.ok) {
   const provider = (await sandbox.json()).data;
+  sandboxConfigured = Boolean(provider?.type);
   if (provider?.type === "daytona") {
     const registered = await api("/api/v1/settings/skills").catch(() => null);
     const names =
@@ -82,6 +84,19 @@ if (!res.ok) {
 }
 const { data: agents = [] } = await res.json();
 const existing = agents.find((a) => a.name === spec.name);
+
+// A container with no working sandbox provider rejects an agent that requests
+// one. Seed it sandbox-disabled rather than not at all: the agent then appears
+// in the library and can be inspected, and re-running seed once a provider is
+// configured restores full capability.
+if (!sandboxConfigured) {
+  spec.manifest.config = { ...spec.manifest.config, sandbox: { enabled: false, file_downloads: false } };
+  spec.manifest.skills = [];
+  console.warn(
+    "No sandbox provider is configured — seeding with sandbox disabled so the agent still loads.",
+  );
+  console.warn("Configure one and re-run `npm run seed` to restore code execution.");
+}
 
 const outcome = existing
   ? await api(`/api/v1/agents/${existing.id}`, {
